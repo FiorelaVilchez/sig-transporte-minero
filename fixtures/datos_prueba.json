@@ -1,0 +1,1322 @@
+[
+{
+    "model": "auth.permission",
+    "pk": 1,
+    "fields": {
+        "name": "Can add log entry",
+        "content_type": 1,
+        "codename": "add_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 2,
+    "fields": {
+        "name": "Can change log entry",
+        "content_type": 1,
+        "codename": "change_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 3,
+    "fields": {
+        "name": "Can delete log entry",
+        "content_type": 1,
+        "codename": "delete_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 4,
+    "fields": {
+        "name": "Can view log entry",
+        "content_type": 1,
+        "codename": "view_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 5,
+    "fields": {
+        "name": "Can add permission",
+        "content_type": 2,
+        "codename": "add_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 6,
+    "fields": {
+        "name": "Can change permission",
+        "content_type": 2,
+        "codename": "change_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 7,
+    "fields": {
+        "name": "Can delete permission",
+        "content_type": 2,
+        "codename": "delete_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 8,
+    "fields": {
+        "name": "Can view permission",
+        "content_type": 2,
+        "codename": "view_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 9,
+    "fields": {
+        "name": "Can add group",
+        "content_type": 3,
+        "codename": "add_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 10,
+    "fields": {
+        "name": "Can change group",
+        "content_type": 3,
+        "codename": "change_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 11,
+    "fields": {
+        "name": "Can delete group",
+        "content_type": 3,
+        "codename": "delete_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 12,
+    "fields": {
+        "name": "Can view group",
+        "content_type": 3,
+        "codename": "view_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 13,
+    "fields": {
+        "name": "Can add user",
+        "content_type": 4,
+        "codename": "add_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 14,
+    "fields": {
+        "name": "Can change user",
+        "content_type": 4,
+        "codename": "change_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 15,
+    "fields": {
+        "name": "Can delete user",
+        "content_type": 4,
+        "codename": "delete_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 16,
+    "fields": {
+        "name": "Can view user",
+        "content_type": 4,
+        "codename": "view_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 17,
+    "fields": {
+        "name": "Can add content type",
+        "content_type": 5,
+        "codename": "add_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 18,
+    "fields": {
+        "name": "Can change content type",
+        "content_type": 5,
+        "codename": "change_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 19,
+    "fields": {
+        "name": "Can delete content type",
+        "content_type": 5,
+        "codename": "delete_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 20,
+    "fields": {
+        "name": "Can view content type",
+        "content_type": 5,
+        "codename": "view_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 21,
+    "fields": {
+        "name": "Can add session",
+        "content_type": 6,
+        "codename": "add_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 22,
+    "fields": {
+        "name": "Can change session",
+        "content_type": 6,
+        "codename": "change_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 23,
+    "fields": {
+        "name": "Can delete session",
+        "content_type": 6,
+        "codename": "delete_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 24,
+    "fields": {
+        "name": "Can view session",
+        "content_type": 6,
+        "codename": "view_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 25,
+    "fields": {
+        "name": "Can add Conductor",
+        "content_type": 7,
+        "codename": "add_conductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 26,
+    "fields": {
+        "name": "Can change Conductor",
+        "content_type": 7,
+        "codename": "change_conductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 27,
+    "fields": {
+        "name": "Can delete Conductor",
+        "content_type": 7,
+        "codename": "delete_conductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 28,
+    "fields": {
+        "name": "Can view Conductor",
+        "content_type": 7,
+        "codename": "view_conductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 29,
+    "fields": {
+        "name": "Can add Vehículo",
+        "content_type": 8,
+        "codename": "add_vehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 30,
+    "fields": {
+        "name": "Can change Vehículo",
+        "content_type": 8,
+        "codename": "change_vehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 31,
+    "fields": {
+        "name": "Can delete Vehículo",
+        "content_type": 8,
+        "codename": "delete_vehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 32,
+    "fields": {
+        "name": "Can view Vehículo",
+        "content_type": 8,
+        "codename": "view_vehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 33,
+    "fields": {
+        "name": "Can add Documento de Conductor",
+        "content_type": 9,
+        "codename": "add_documentoconductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 34,
+    "fields": {
+        "name": "Can change Documento de Conductor",
+        "content_type": 9,
+        "codename": "change_documentoconductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 35,
+    "fields": {
+        "name": "Can delete Documento de Conductor",
+        "content_type": 9,
+        "codename": "delete_documentoconductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 36,
+    "fields": {
+        "name": "Can view Documento de Conductor",
+        "content_type": 9,
+        "codename": "view_documentoconductor"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 37,
+    "fields": {
+        "name": "Can add Documento de Vehículo",
+        "content_type": 10,
+        "codename": "add_documentovehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 38,
+    "fields": {
+        "name": "Can change Documento de Vehículo",
+        "content_type": 10,
+        "codename": "change_documentovehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 39,
+    "fields": {
+        "name": "Can delete Documento de Vehículo",
+        "content_type": 10,
+        "codename": "delete_documentovehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 40,
+    "fields": {
+        "name": "Can view Documento de Vehículo",
+        "content_type": 10,
+        "codename": "view_documentovehiculo"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 41,
+    "fields": {
+        "name": "Can add Solicitud de Servicio",
+        "content_type": 11,
+        "codename": "add_solicitudservicio"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 42,
+    "fields": {
+        "name": "Can change Solicitud de Servicio",
+        "content_type": 11,
+        "codename": "change_solicitudservicio"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 43,
+    "fields": {
+        "name": "Can delete Solicitud de Servicio",
+        "content_type": 11,
+        "codename": "delete_solicitudservicio"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 44,
+    "fields": {
+        "name": "Can view Solicitud de Servicio",
+        "content_type": 11,
+        "codename": "view_solicitudservicio"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 45,
+    "fields": {
+        "name": "Can add Asignación",
+        "content_type": 12,
+        "codename": "add_asignacion"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 46,
+    "fields": {
+        "name": "Can change Asignación",
+        "content_type": 12,
+        "codename": "change_asignacion"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 47,
+    "fields": {
+        "name": "Can delete Asignación",
+        "content_type": 12,
+        "codename": "delete_asignacion"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 48,
+    "fields": {
+        "name": "Can view Asignación",
+        "content_type": 12,
+        "codename": "view_asignacion"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 49,
+    "fields": {
+        "name": "Can add Alerta",
+        "content_type": 13,
+        "codename": "add_alerta"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 50,
+    "fields": {
+        "name": "Can change Alerta",
+        "content_type": 13,
+        "codename": "change_alerta"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 51,
+    "fields": {
+        "name": "Can delete Alerta",
+        "content_type": 13,
+        "codename": "delete_alerta"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 52,
+    "fields": {
+        "name": "Can view Alerta",
+        "content_type": 13,
+        "codename": "view_alerta"
+    }
+},
+{
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$HqERRu6ylYcDgvOSbMc3Yg$1PnB2MWqbh0ljvQLOCf3jZLXJ7zcqtN/vw3KdvpXADI=",
+        "last_login": null,
+        "is_superuser": true,
+        "username": "admin",
+        "first_name": "",
+        "last_name": "",
+        "email": "admin@example.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-07-14T02:13:17.673Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 1,
+    "fields": {
+        "app_label": "admin",
+        "model": "logentry"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 2,
+    "fields": {
+        "app_label": "auth",
+        "model": "permission"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 3,
+    "fields": {
+        "app_label": "auth",
+        "model": "group"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 4,
+    "fields": {
+        "app_label": "auth",
+        "model": "user"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 5,
+    "fields": {
+        "app_label": "contenttypes",
+        "model": "contenttype"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 6,
+    "fields": {
+        "app_label": "sessions",
+        "model": "session"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 7,
+    "fields": {
+        "app_label": "drivers",
+        "model": "conductor"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 8,
+    "fields": {
+        "app_label": "trucks",
+        "model": "vehiculo"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 9,
+    "fields": {
+        "app_label": "documents",
+        "model": "documentoconductor"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 10,
+    "fields": {
+        "app_label": "documents",
+        "model": "documentovehiculo"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 11,
+    "fields": {
+        "app_label": "service_requests",
+        "model": "solicitudservicio"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 12,
+    "fields": {
+        "app_label": "assignments",
+        "model": "asignacion"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "pk": 13,
+    "fields": {
+        "app_label": "alerts",
+        "model": "alerta"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 1,
+    "fields": {
+        "nombres": "Juan Alberto",
+        "apellidos": "Pérez Quispe",
+        "licencia": "Q12345678",
+        "especialidad": "Camioneta y Bus",
+        "estado": "Disponible",
+        "dni": "70123456",
+        "telefono": "951123456",
+        "fecha_nacimiento": "1985-05-12",
+        "fecha_ingreso": "2020-01-15",
+        "created_at": "2026-07-14T02:15:07.862Z",
+        "updated_at": "2026-07-14T02:15:07.862Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 2,
+    "fields": {
+        "nombres": "Carlos",
+        "apellidos": "Ramos Mamani",
+        "licencia": "A23456789",
+        "especialidad": "Camión y Volquete",
+        "estado": "Disponible",
+        "dni": "45123456",
+        "telefono": "952345678",
+        "fecha_nacimiento": "1990-08-22",
+        "fecha_ingreso": "2021-06-01",
+        "created_at": "2026-07-14T02:15:07.902Z",
+        "updated_at": "2026-07-14T02:15:07.902Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 3,
+    "fields": {
+        "nombres": "Miguel Ángel",
+        "apellidos": "Lope Callo",
+        "licencia": "B34567890",
+        "especialidad": "Bus y Camión",
+        "estado": "Ocupado",
+        "dni": "40876543",
+        "telefono": "953456789",
+        "fecha_nacimiento": "1988-03-30",
+        "fecha_ingreso": "2019-11-10",
+        "created_at": "2026-07-14T02:15:07.935Z",
+        "updated_at": "2026-07-14T02:15:07.935Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 4,
+    "fields": {
+        "nombres": "Luis Fernando",
+        "apellidos": "Apaza Coila",
+        "licencia": "C45678901",
+        "especialidad": "Camioneta",
+        "estado": "No apto",
+        "dni": "44123876",
+        "telefono": "954567890",
+        "fecha_nacimiento": "1995-12-05",
+        "fecha_ingreso": "2023-03-20",
+        "created_at": "2026-07-14T02:15:07.967Z",
+        "updated_at": "2026-07-14T02:15:07.967Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 5,
+    "fields": {
+        "nombres": "Pedro Pablo",
+        "apellidos": "Quispe Vilca",
+        "licencia": "D56789012",
+        "especialidad": "Volquete",
+        "estado": "De baja",
+        "dni": "30456123",
+        "telefono": "955678901",
+        "fecha_nacimiento": "1980-02-18",
+        "fecha_ingreso": "2015-05-01",
+        "created_at": "2026-07-14T02:15:08.039Z",
+        "updated_at": "2026-07-14T02:15:08.039Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 6,
+    "fields": {
+        "nombres": "Jorge",
+        "apellidos": "Cutipa Flores",
+        "licencia": "E67890123",
+        "especialidad": "Camioneta y Bus",
+        "estado": "Disponible",
+        "dni": "46543210",
+        "telefono": "956789012",
+        "fecha_nacimiento": "1992-10-10",
+        "fecha_ingreso": "2022-02-15",
+        "created_at": "2026-07-14T02:15:08.072Z",
+        "updated_at": "2026-07-14T02:15:08.072Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 7,
+    "fields": {
+        "nombres": "Mario Augusto",
+        "apellidos": "Flores Condori",
+        "licencia": "F78901234",
+        "especialidad": "Camión pesado",
+        "estado": "Ocupado",
+        "dni": "29876543",
+        "telefono": "957890123",
+        "fecha_nacimiento": "1983-07-25",
+        "fecha_ingreso": "2018-04-10",
+        "created_at": "2026-07-14T02:15:08.105Z",
+        "updated_at": "2026-07-14T02:15:08.105Z"
+    }
+},
+{
+    "model": "drivers.conductor",
+    "pk": 8,
+    "fields": {
+        "nombres": "Roberto",
+        "apellidos": "Choque Vargas",
+        "licencia": "G89012345",
+        "especialidad": "Bus",
+        "estado": "Disponible",
+        "dni": "42345678",
+        "telefono": "958901234",
+        "fecha_nacimiento": "1987-11-30",
+        "fecha_ingreso": "2021-09-01",
+        "created_at": "2026-07-14T02:15:08.146Z",
+        "updated_at": "2026-07-14T02:15:08.146Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 1,
+    "fields": {
+        "placa": "V1A-100",
+        "tipo": "Camioneta",
+        "capacidad": 5,
+        "estado": "Disponible",
+        "revision_tecnica_vigente": true,
+        "seguro_vigente": true,
+        "homologacion": "HOM-C-2026-01",
+        "mantenimiento_programado": "2026-08-27",
+        "created_at": "2026-07-14T02:15:08.179Z",
+        "updated_at": "2026-07-14T02:15:08.179Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 2,
+    "fields": {
+        "placa": "V2B-200",
+        "tipo": "Bus",
+        "capacidad": 45,
+        "estado": "En servicio",
+        "revision_tecnica_vigente": true,
+        "seguro_vigente": true,
+        "homologacion": "HOM-B-2026-02",
+        "mantenimiento_programado": "2026-08-12",
+        "created_at": "2026-07-14T02:15:08.211Z",
+        "updated_at": "2026-07-14T02:15:08.211Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 3,
+    "fields": {
+        "placa": "V3C-300",
+        "tipo": "Camión",
+        "capacidad": 12,
+        "estado": "Disponible",
+        "revision_tecnica_vigente": true,
+        "seguro_vigente": true,
+        "homologacion": "HOM-M-2026-03",
+        "mantenimiento_programado": "2026-07-28",
+        "created_at": "2026-07-14T02:15:08.243Z",
+        "updated_at": "2026-07-14T02:15:08.243Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 4,
+    "fields": {
+        "placa": "V4D-400",
+        "tipo": "Volquete",
+        "capacidad": 18,
+        "estado": "En mantenimiento",
+        "revision_tecnica_vigente": false,
+        "seguro_vigente": true,
+        "homologacion": "HOM-V-2026-04",
+        "mantenimiento_programado": "2026-07-15",
+        "created_at": "2026-07-14T02:15:08.285Z",
+        "updated_at": "2026-07-14T02:15:08.285Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 5,
+    "fields": {
+        "placa": "V5E-500",
+        "tipo": "Camioneta",
+        "capacidad": 5,
+        "estado": "De baja",
+        "revision_tecnica_vigente": false,
+        "seguro_vigente": false,
+        "homologacion": "",
+        "mantenimiento_programado": null,
+        "created_at": "2026-07-14T02:15:08.318Z",
+        "updated_at": "2026-07-14T02:15:08.318Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 6,
+    "fields": {
+        "placa": "V6F-600",
+        "tipo": "Bus",
+        "capacidad": 30,
+        "estado": "Disponible",
+        "revision_tecnica_vigente": true,
+        "seguro_vigente": true,
+        "homologacion": "HOM-B-2026-06",
+        "mantenimiento_programado": "2026-09-11",
+        "created_at": "2026-07-14T02:15:08.350Z",
+        "updated_at": "2026-07-14T02:15:08.350Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 7,
+    "fields": {
+        "placa": "V7G-700",
+        "tipo": "Camión",
+        "capacidad": 15,
+        "estado": "En servicio",
+        "revision_tecnica_vigente": true,
+        "seguro_vigente": true,
+        "homologacion": "HOM-M-2026-07",
+        "mantenimiento_programado": "2026-08-07",
+        "created_at": "2026-07-14T02:15:08.383Z",
+        "updated_at": "2026-07-14T02:15:08.383Z"
+    }
+},
+{
+    "model": "trucks.vehiculo",
+    "pk": 8,
+    "fields": {
+        "placa": "V8H-800",
+        "tipo": "Volquete",
+        "capacidad": 20,
+        "estado": "Disponible",
+        "revision_tecnica_vigente": true,
+        "seguro_vigente": true,
+        "homologacion": "HOM-V-2026-08",
+        "mantenimiento_programado": "2026-08-22",
+        "created_at": "2026-07-14T02:15:08.424Z",
+        "updated_at": "2026-07-14T02:15:08.424Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 1,
+    "fields": {
+        "conductor": 1,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2025-07-13",
+        "fecha_vencimiento": "2027-07-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.457Z",
+        "updated_at": "2026-07-14T02:15:08.457Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 2,
+    "fields": {
+        "conductor": 1,
+        "tipo_documento": "Examen médico",
+        "fecha_emision": "2026-04-14",
+        "fecha_vencimiento": "2027-04-09",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.491Z",
+        "updated_at": "2026-07-14T02:15:08.491Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 3,
+    "fields": {
+        "conductor": 2,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2024-08-12",
+        "fecha_vencimiento": "2026-07-28",
+        "estado_documento": "Por vencer",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.524Z",
+        "updated_at": "2026-07-14T02:15:08.524Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 4,
+    "fields": {
+        "conductor": 2,
+        "tipo_documento": "Homologación",
+        "fecha_emision": "2025-07-08",
+        "fecha_vencimiento": "2026-07-08",
+        "estado_documento": "Vencido",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.558Z",
+        "updated_at": "2026-07-14T02:15:08.558Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 5,
+    "fields": {
+        "conductor": 3,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2026-04-04",
+        "fecha_vencimiento": "2028-12-29",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.591Z",
+        "updated_at": "2026-07-14T02:15:08.591Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 6,
+    "fields": {
+        "conductor": 4,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2026-05-24",
+        "fecha_vencimiento": "2028-03-04",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.633Z",
+        "updated_at": "2026-07-14T02:15:08.633Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 7,
+    "fields": {
+        "conductor": 4,
+        "tipo_documento": "Examen médico",
+        "fecha_emision": "2025-06-13",
+        "fecha_vencimiento": "2026-06-13",
+        "estado_documento": "Vencido",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.666Z",
+        "updated_at": "2026-07-14T02:15:08.666Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 8,
+    "fields": {
+        "conductor": 6,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2025-12-25",
+        "fecha_vencimiento": "2027-11-25",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.699Z",
+        "updated_at": "2026-07-14T02:15:08.699Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 9,
+    "fields": {
+        "conductor": 6,
+        "tipo_documento": "Autorización",
+        "fecha_emision": "2026-06-13",
+        "fecha_vencimiento": "2027-06-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.731Z",
+        "updated_at": "2026-07-14T02:15:08.731Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 10,
+    "fields": {
+        "conductor": 7,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2025-12-25",
+        "fecha_vencimiento": "2027-11-25",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.772Z",
+        "updated_at": "2026-07-14T02:15:08.772Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 11,
+    "fields": {
+        "conductor": 7,
+        "tipo_documento": "Autorización",
+        "fecha_emision": "2026-06-13",
+        "fecha_vencimiento": "2027-06-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.805Z",
+        "updated_at": "2026-07-14T02:15:08.805Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 12,
+    "fields": {
+        "conductor": 8,
+        "tipo_documento": "Licencia de conducir",
+        "fecha_emision": "2025-12-25",
+        "fecha_vencimiento": "2027-11-25",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.838Z",
+        "updated_at": "2026-07-14T02:15:08.838Z"
+    }
+},
+{
+    "model": "documents.documentoconductor",
+    "pk": 13,
+    "fields": {
+        "conductor": 8,
+        "tipo_documento": "Autorización",
+        "fecha_emision": "2026-06-13",
+        "fecha_vencimiento": "2027-06-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.871Z",
+        "updated_at": "2026-07-14T02:15:08.871Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 1,
+    "fields": {
+        "vehiculo": 1,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2026-04-04",
+        "fecha_vencimiento": "2027-04-04",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.909Z",
+        "updated_at": "2026-07-14T02:15:08.909Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 2,
+    "fields": {
+        "vehiculo": 1,
+        "tipo_documento": "Revisión técnica",
+        "fecha_emision": "2026-01-14",
+        "fecha_vencimiento": "2027-01-14",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.942Z",
+        "updated_at": "2026-07-14T02:15:08.942Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 3,
+    "fields": {
+        "vehiculo": 2,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2025-09-16",
+        "fecha_vencimiento": "2026-09-16",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:08.984Z",
+        "updated_at": "2026-07-14T02:15:08.984Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 4,
+    "fields": {
+        "vehiculo": 3,
+        "tipo_documento": "Revisión técnica",
+        "fecha_emision": "2025-07-28",
+        "fecha_vencimiento": "2026-07-28",
+        "estado_documento": "Por vencer",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.017Z",
+        "updated_at": "2026-07-14T02:15:09.017Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 5,
+    "fields": {
+        "vehiculo": 3,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2025-07-18",
+        "fecha_vencimiento": "2026-07-08",
+        "estado_documento": "Vencido",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.050Z",
+        "updated_at": "2026-07-14T02:15:09.050Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 6,
+    "fields": {
+        "vehiculo": 4,
+        "tipo_documento": "Revisión técnica",
+        "fecha_emision": "2025-07-03",
+        "fecha_vencimiento": "2026-07-03",
+        "estado_documento": "Vencido",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.082Z",
+        "updated_at": "2026-07-14T02:15:09.082Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 7,
+    "fields": {
+        "vehiculo": 4,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2026-05-24",
+        "fecha_vencimiento": "2027-05-24",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.116Z",
+        "updated_at": "2026-07-14T02:15:09.116Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 8,
+    "fields": {
+        "vehiculo": 6,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2026-02-13",
+        "fecha_vencimiento": "2027-02-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.157Z",
+        "updated_at": "2026-07-14T02:15:09.157Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 9,
+    "fields": {
+        "vehiculo": 6,
+        "tipo_documento": "Revisión técnica",
+        "fecha_emision": "2026-05-24",
+        "fecha_vencimiento": "2027-05-24",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.189Z",
+        "updated_at": "2026-07-14T02:15:09.189Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 10,
+    "fields": {
+        "vehiculo": 7,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2026-02-13",
+        "fecha_vencimiento": "2027-02-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.222Z",
+        "updated_at": "2026-07-14T02:15:09.222Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 11,
+    "fields": {
+        "vehiculo": 7,
+        "tipo_documento": "Revisión técnica",
+        "fecha_emision": "2026-05-24",
+        "fecha_vencimiento": "2027-05-24",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.264Z",
+        "updated_at": "2026-07-14T02:15:09.264Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 12,
+    "fields": {
+        "vehiculo": 8,
+        "tipo_documento": "Seguro",
+        "fecha_emision": "2026-02-13",
+        "fecha_vencimiento": "2027-02-13",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.383Z",
+        "updated_at": "2026-07-14T02:15:09.383Z"
+    }
+},
+{
+    "model": "documents.documentovehiculo",
+    "pk": 13,
+    "fields": {
+        "vehiculo": 8,
+        "tipo_documento": "Revisión técnica",
+        "fecha_emision": "2026-05-24",
+        "fecha_vencimiento": "2027-05-24",
+        "estado_documento": "Vigente",
+        "archivo": "",
+        "created_at": "2026-07-14T02:15:09.416Z",
+        "updated_at": "2026-07-14T02:15:09.416Z"
+    }
+},
+{
+    "model": "service_requests.solicitudservicio",
+    "pk": 1,
+    "fields": {
+        "cliente": "Minera San Rafael",
+        "fecha_servicio": "2026-07-15",
+        "hora_servicio": "08:00:00",
+        "origen": "Juliaca",
+        "destino": "Unidad Minera San Rafael",
+        "tipo_servicio": "Traslado de personal",
+        "prioridad": "Alta",
+        "tipo_vehiculo_requerido": "Camioneta",
+        "estado_solicitud": "Pendiente",
+        "created_at": "2026-07-14T02:15:09.457Z",
+        "updated_at": "2026-07-14T02:15:09.457Z"
+    }
+},
+{
+    "model": "service_requests.solicitudservicio",
+    "pk": 2,
+    "fields": {
+        "cliente": "Minera Minsur",
+        "fecha_servicio": "2026-07-16",
+        "hora_servicio": "10:30:00",
+        "origen": "Arequipa",
+        "destino": "Unidad Minera San Rafael",
+        "tipo_servicio": "Traslado de carga",
+        "prioridad": "Media",
+        "tipo_vehiculo_requerido": "Camión",
+        "estado_solicitud": "Pendiente",
+        "created_at": "2026-07-14T02:15:09.490Z",
+        "updated_at": "2026-07-14T02:15:09.490Z"
+    }
+},
+{
+    "model": "service_requests.solicitudservicio",
+    "pk": 3,
+    "fields": {
+        "cliente": "Compañía Minera Antamina",
+        "fecha_servicio": "2026-07-14",
+        "hora_servicio": "06:00:00",
+        "origen": "Huaraz",
+        "destino": "Unidad Minera Antamina",
+        "tipo_servicio": "Traslado mixto",
+        "prioridad": "Alta",
+        "tipo_vehiculo_requerido": "Camión",
+        "estado_solicitud": "Asignada",
+        "created_at": "2026-07-14T02:15:09.522Z",
+        "updated_at": "2026-07-14T02:15:09.522Z"
+    }
+},
+{
+    "model": "service_requests.solicitudservicio",
+    "pk": 4,
+    "fields": {
+        "cliente": "Minera Cerro Verde",
+        "fecha_servicio": "2026-07-11",
+        "hora_servicio": "14:00:00",
+        "origen": "Arequipa",
+        "destino": "Unidad Minera Cerro Verde",
+        "tipo_servicio": "Traslado de personal",
+        "prioridad": "Baja",
+        "tipo_vehiculo_requerido": "Bus",
+        "estado_solicitud": "Completada",
+        "created_at": "2026-07-14T02:15:09.554Z",
+        "updated_at": "2026-07-14T02:15:09.554Z"
+    }
+},
+{
+    "model": "service_requests.solicitudservicio",
+    "pk": 5,
+    "fields": {
+        "cliente": "Minera Las Bambas",
+        "fecha_servicio": "2026-07-18",
+        "hora_servicio": "07:00:00",
+        "origen": "Cusco",
+        "destino": "Unidad Minera Las Bambas",
+        "tipo_servicio": "Traslado de carga",
+        "prioridad": "Alta",
+        "tipo_vehiculo_requerido": "Volquete",
+        "estado_solicitud": "Cancelada",
+        "created_at": "2026-07-14T02:15:09.600Z",
+        "updated_at": "2026-07-14T02:15:09.600Z"
+    }
+},
+{
+    "model": "service_requests.solicitudservicio",
+    "pk": 6,
+    "fields": {
+        "cliente": "Minera Buenaventura",
+        "fecha_servicio": "2026-07-17",
+        "hora_servicio": "09:00:00",
+        "origen": "Puno",
+        "destino": "Mina Tambomayo",
+        "tipo_servicio": "Traslado de personal",
+        "prioridad": "Media",
+        "tipo_vehiculo_requerido": "Bus",
+        "estado_solicitud": "Reprogramada",
+        "created_at": "2026-07-14T02:15:09.641Z",
+        "updated_at": "2026-07-14T02:15:09.641Z"
+    }
+}
+]
