@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.lib/
+lib/
+lib64/
+parts/
+sdist/
+var/
+venv/
+pip-selfcheck.json
+pip-log.txt
+pip-delete-this-directory.txt
+.venv/
+poetry.lock
+Pipfile.lock
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/collected/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo

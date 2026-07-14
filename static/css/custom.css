@@ -1,0 +1,204 @@
+/* Custom variables for SIG - Transporte Minero */
+:root {
+    --primary-dark: #111c24;       /* Deep slate/navy for primary layout elements */
+    --primary-medium: #1b2a38;     /* Medium slate for sidebars and headers */
+    --primary-light: #2c3e50;      /* Lighter slate for active items */
+    --accent-orange: #f39c12;      /* Industrial amber/orange */
+    --accent-orange-hover: #e67e22;/* Darker amber/orange */
+    --bg-light: #f5f7fa;           /* Off-white background */
+    --text-dark: #2c3e50;          /* Dark gray for primary text */
+    --text-muted: #7f8c8d;         /* Medium gray for muted text */
+    --border-color: #e2e8f0;       /* Soft border color */
+    --sidebar-width: 260px;
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header & Navbar */
+.navbar-custom {
+    background-color: var(--primary-dark);
+    border-bottom: 2px solid var(--accent-orange);
+    padding: 0.75rem 1.5rem;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.navbar-brand .accent {
+    color: var(--accent-orange);
+}
+
+.user-badge {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--accent-orange);
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Page Layout */
+.app-container {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 62px - 56px); /* minus navbar and footer */
+}
+
+/* Sidebar Navigation */
+.sidebar-custom {
+    width: var(--sidebar-width);
+    background-color: var(--primary-medium);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 0.5rem 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+    border-left: 4px solid transparent;
+    font-size: 0.9rem;
+}
+
+.sidebar-link i {
+    width: 20px;
+    margin-right: 12px;
+    font-size: 1.1rem;
+    transition: transform var(--transition-speed) ease;
+}
+
+.sidebar-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-left-color: var(--accent-orange);
+}
+
+.sidebar-link:hover i {
+    transform: scale(1.15);
+}
+
+.sidebar-link.active {
+    color: #fff;
+    background-color: var(--primary-light);
+    border-left-color: var(--accent-orange);
+    font-weight: 600;
+}
+
+/* Content Area */
+.content-area {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: var(--bg-light);
+}
+
+/* Card Styling */
+.card-premium {
+    background: #ffffff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    border-top: 4px solid var(--primary-light);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.card-premium.accent-header {
+    border-top-color: var(--accent-orange);
+}
+
+.card-title {
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+/* Footer */
+.footer-custom {
+    background-color: var(--primary-dark);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem 0;
+    text-align: center;
+    margin-top: auto;
+}
+
+/* Micro-animations and Utilities */
+.btn-accent {
+    background-color: var(--accent-orange);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.btn-accent:hover {
+    background-color: var(--accent-orange-hover);
+    color: #fff;
+}
+
+.btn-outline-custom {
+    border: 1px solid var(--accent-orange);
+    color: var(--accent-orange);
+    background-color: transparent;
+    font-weight: 500;
+    transition: all var(--transition-speed) ease;
+}
+
+.btn-outline-custom:hover {
+    background-color: var(--accent-orange);
+    color: #fff;
+}
+
+.text-accent {
+    color: var(--accent-orange);
+}
+
+/* Sidebar responsive behaviour - simple toggle helper */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+    .sidebar-custom {
+        width: 100%;
+        padding: 1rem 0;
+    }
+}

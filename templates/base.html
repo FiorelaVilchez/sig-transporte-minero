@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SIG — Transporte Minero{% endblock %}</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Upper Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-fill text-accent me-2"></i>SIG <span class="accent">—</span> Transporte Minero
+            </a>
+            <button class="navbar-row navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+                <!-- User Profile / Role info mockup -->
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-3 user-badge">
+                        <i class="bi bi-person-badge-fill text-accent me-1"></i>
+                        <strong>Usuario:</strong> Carlos Mendoza | <span class="badge bg-warning text-dark font-monospace">Administrador</span>
+                    </span>
+                    <a href="#" class="btn btn-sm btn-outline-custom">
+                        <i class="bi bi-box-arrow-right me-1"></i> Salir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout Container -->
+    <div class="app-container">
+        
+        <!-- Left Sidebar -->
+        <aside class="sidebar-custom">
+            <div>
+                <div class="sidebar-heading">Módulos del Sistema</div>
+                <ul class="sidebar-nav">
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link active">
+                            <i class="bi bi-house-door-fill"></i> Inicio
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-box-arrow-in-right"></i> Inicio de Sesión
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-speedometer2"></i> Dashboard Operativo
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-people"></i> Registro de Conductores
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-truck"></i> Registro de Vehículos
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-file-earmark-medical"></i> Control Documental
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-clipboard-check"></i> Registro de Solicitudes
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-cpu"></i> Asignación Automática
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-exclamation-triangle"></i> Alertas
+                        </a>
+                    </li>
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-graph-up"></i> Reportes Gerenciales
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Quick System Status Mockup -->
+            <div class="px-3 py-2">
+                <div class="card bg-dark text-light border-0 rounded p-2" style="font-size: 0.75rem; background-color: rgba(0, 0, 0, 0.2) !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span>Base de Datos:</span>
+                        <span class="badge bg-success font-monospace">SQLite</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span>Entorno:</span>
+                        <span class="badge bg-info text-dark font-monospace">Prototipo</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            {% block content %}
+            <!-- Content goes here -->
+            {% endblock %}
+        </main>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer-custom">
+        <div class="container">
+            <span>Universidad Nacional del Altiplano &copy; 2026 | Curso: Tópicos en Sistemas de Información</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
