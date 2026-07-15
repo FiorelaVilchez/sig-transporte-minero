@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — SIG Transporte Minero</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom styling inside custom.css -->
+    <style>
+        :root {
+            --primary-dark: #111c24;
+            --primary-medium: #1b2a38;
+            --accent-orange: #f39c12;
+            --bg-light: #f5f7fa;
+            --text-dark: #2c3e50;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 420px;
+            background-color: #ffffff;
+            overflow: hidden;
+            border-top: 5px solid var(--accent-orange);
+        }
+        .login-header {
+            background-color: var(--primary-dark);
+            color: #ffffff;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .login-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 0.5px;
+        }
+        .login-brand span {
+            color: var(--accent-orange);
+        }
+        .login-body {
+            padding: 2.25rem 2rem;
+        }
+        .form-control:focus {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
+        }
+        .btn-accent {
+            background-color: var(--accent-orange);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            padding: 0.65rem;
+            transition: all 0.2s ease;
+        }
+        .btn-accent:hover {
+            background-color: #e67e22;
+            color: #ffffff;
+        }
+        .login-footer {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.75rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-brand mb-1">
+                <i class="bi bi-shield-fill text-accent me-2"></i>SIG <span>—</span> Transporte Minero
+            </div>
+            <div class="small text-white-50">Gestión e Integridad de Recursos Logísticos</div>
+        </div>
+        <div class="login-body">
+            
+            {% if form.errors %}
+                <div class="alert alert-danger d-flex align-items-center" role="alert" style="font-size: 0.85rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
+                    <div>
+                        Usuario o contraseña incorrectos. Inténtalo de nuevo.
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if next %}
+                <div class="alert alert-warning d-flex align-items-center" role="alert" style="font-size: 0.85rem;">
+                    <i class="bi bi-info-circle-fill me-2 flex-shrink-0"></i>
+                    <div>
+                        Por favor inicia sesión para acceder a esta página.
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_username" class="form-label small fw-bold text-muted">Nombre de Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-person"></i></span>
+                        <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" class="form-control bg-light border-start-0" placeholder="Ingrese su usuario" required id="id_username">
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="id_password" class="form-label small fw-bold text-muted">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                        <input type="password" name="password" autocomplete="current-password" class="form-control bg-light border-start-0" placeholder="Ingrese su contraseña" required id="id_password">
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-accent rounded">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                    </button>
+                </div>
+            </form>
+            
+            <div class="login-footer">
+                <div>Universidad Nacional del Altiplano</div>
+                <div>Curso: Tópicos en Sistemas de Información</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

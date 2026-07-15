@@ -29,15 +29,26 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
-                <!-- User Profile / Role info mockup -->
                 <div class="d-flex align-items-center">
-                    <span class="text-light me-3 user-badge">
-                        <i class="bi bi-person-badge-fill text-accent me-1"></i>
-                        <strong>Usuario:</strong> Carlos Mendoza | <span class="badge bg-warning text-dark font-monospace">Administrador</span>
-                    </span>
-                    <a href="#" class="btn btn-sm btn-outline-custom">
-                        <i class="bi bi-box-arrow-right me-1"></i> Salir
-                    </a>
+                    {% if user.is_authenticated %}
+                        <span class="text-light me-3 user-badge">
+                            <i class="bi bi-person-badge-fill text-accent me-1"></i>
+                            <strong>Usuario:</strong> {{ user.first_name }} {{ user.last_name }} | 
+                            <span class="badge bg-warning text-dark font-monospace" style="font-size: 0.75rem;">
+                                {{ user.perfilusuario.rol }}
+                            </span>
+                        </span>
+                        <form action="{% url 'core:logout' %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-custom">
+                                <i class="bi bi-box-arrow-right me-1"></i> Salir
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'core:login' %}" class="btn btn-sm btn-outline-custom">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -46,29 +57,36 @@
     <!-- Main Layout Container -->
     <div class="app-container">
         
+        {% if user.is_authenticated %}
         <!-- Left Sidebar -->
         <aside class="sidebar-custom">
             <div>
                 <div class="sidebar-heading">Módulos del Sistema</div>
                 <ul class="sidebar-nav">
+                    <!-- Todos los roles -->
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link active">
+                        <a href="{% url 'core:home' %}" class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                             <i class="bi bi-house-door-fill"></i> Inicio
                         </a>
                     </li>
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
-                            <i class="bi bi-box-arrow-in-right"></i> Inicio de Sesión
+                        <a href="{% url 'core:perfil' %}" class="sidebar-link {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
+                            <i class="bi bi-person-circle"></i> Mi Perfil
                         </a>
                     </li>
+
+                    <!-- Dashboard operativo: Administrador, Supervisor, Gerencia -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
                         <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-speedometer2"></i> Dashboard Operativo
                         </a>
                     </li>
+                    {% endif %}
+
+                    <!-- Conductores / Vehículos / Solicitudes / Asignación automática: Administrador de operaciones -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
                         <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
@@ -84,12 +102,6 @@
                     <li>
                         <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
-                            <i class="bi bi-file-earmark-medical"></i> Control Documental
-                        </a>
-                    </li>
-                    <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
                             <i class="bi bi-clipboard-check"></i> Registro de Solicitudes
                         </a>
                     </li>
@@ -99,18 +111,33 @@
                             <i class="bi bi-cpu"></i> Asignación Automática
                         </a>
                     </li>
+                    {% endif %}
+
+                    <!-- Control documental / Alertas: Administrador, Supervisor -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
+                    <li>
+                        <!-- TODO fase 6 -->
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-file-earmark-medical"></i> Control Documental
+                        </a>
+                    </li>
                     <li>
                         <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-exclamation-triangle"></i> Alertas
                         </a>
                     </li>
+                    {% endif %}
+
+                    <!-- Reportes Gerenciales (Power BI): Gerencia, Administrador -->
+                    {% if user.perfilusuario.rol == 'Gerencia' or user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
                         <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-graph-up"></i> Reportes Gerenciales
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
             
@@ -118,16 +145,19 @@
             <div class="px-3 py-2">
                 <div class="card bg-dark text-light border-0 rounded p-2" style="font-size: 0.75rem; background-color: rgba(0, 0, 0, 0.2) !important;">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span>Base de Datos:</span>
+                        <span>Base:</span>
                         <span class="badge bg-success font-monospace">SQLite</span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <span>Entorno:</span>
-                        <span class="badge bg-info text-dark font-monospace">Prototipo</span>
+                        <span>Rol:</span>
+                        <span class="badge bg-info text-dark font-monospace" style="max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ user.perfilusuario.rol }}
+                        </span>
                     </div>
                 </div>
             </div>
         </aside>
+        {% endif %}
 
         <!-- Main Content Area -->
         <main class="content-area">

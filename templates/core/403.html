@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Acceso Denegado — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden" style="border-top: 5px solid #d9534f !important;">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-shield-slash-fill text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    <h1 class="h3 mb-3 fw-bold text-dark">Acceso Denegado</h1>
+                    <p class="text-muted mb-4 fs-5 leading-relaxed">
+                        No tienes permisos suficientes para acceder a esta sección del sistema. Esta área está restringida.
+                    </p>
+                    
+                    <div class="bg-light p-3 rounded mb-4 text-start font-monospace" style="font-size: 0.85rem;">
+                        <div class="mb-1 text-dark"><strong>Tu rol actual:</strong> <span class="badge bg-secondary">{{ user_role }}</span></div>
+                        <div class="text-muted"><strong>Roles autorizados:</strong> 
+                            {% for role in allowed_roles %}
+                                <span class="badge bg-dark">{{ role }}</span>{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <a href="{% url 'core:home' %}" class="btn btn-outline-custom px-4">
+                            <i class="bi bi-house-door-fill me-1"></i> Ir al Inicio
+                        </a>
+                        <button onclick="history.back()" class="btn btn-dark px-4">
+                            <i class="bi bi-arrow-left me-1"></i> Volver Atrás
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

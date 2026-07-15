@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1 fw-bold text-dark">Mi Perfil de Usuario</h1>
+            <p class="text-muted mb-0">Detalles de la cuenta y vinculaciones del sistema.</p>
+            <hr class="mt-3">
+        </div>
+    </div>
+
+    <!-- Profile Details Card -->
+    <div class="row">
+        <div class="col-md-8 col-lg-6">
+            <div class="card card-premium shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-person-fill fs-2"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">{{ user.first_name }} {{ user.last_name }}</h4>
+                            <span class="text-muted small">@{{ user.username }}</span>
+                        </div>
+                    </div>
+                    
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">Información del Sistema</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted small">Rol Asignado:</div>
+                        <div class="col-8">
+                            <span class="badge bg-warning text-dark px-3 py-2 font-monospace">{{ user.perfilusuario.rol }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted small">Correo Electrónico:</div>
+                        <div class="col-8 text-dark">{{ user.email|default:"No registrado" }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-4 text-muted small">Teléfono de Contacto:</div>
+                        <div class="col-8 text-dark">{{ user.perfilusuario.telefono|default:"No registrado" }}</div>
+                    </div>
+
+                    {% if user.perfilusuario.rol == 'Conductor' %}
+                        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2 text-accent">
+                            <i class="bi bi-truck me-1"></i>Conductor Vinculado
+                        </h5>
+                        
+                        {% if user.perfilusuario.conductor %}
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted small">Conductor ID:</div>
+                                <div class="col-8 text-dark fw-bold">#{{ user.perfilusuario.conductor.driver_id }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted small">Nombres y Apellidos:</div>
+                                <div class="col-8 text-dark">{{ user.perfilusuario.conductor.nombres }} {{ user.perfilusuario.conductor.apellidos }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted small">Número de Licencia:</div>
+                                <div class="col-8 text-dark font-monospace">{{ user.perfilusuario.conductor.licencia }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted small">DNI:</div>
+                                <div class="col-8 text-dark font-monospace">{{ user.perfilusuario.conductor.dni }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted small">Estado de Apto:</div>
+                                <div class="col-8">
+                                    {% if user.perfilusuario.conductor.estado == 'Disponible' %}
+                                        <span class="badge bg-success">{{ user.perfilusuario.conductor.estado }}</span>
+                                    {% elif user.perfilusuario.conductor.estado == 'Ocupado' %}
+                                        <span class="badge bg-info text-dark">{{ user.perfilusuario.conductor.estado }}</span>
+                                    {% elif user.perfilusuario.conductor.estado == 'No apto' %}
+                                        <span class="badge bg-danger">{{ user.perfilusuario.conductor.estado }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ user.perfilusuario.conductor.estado }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                Error: Tu usuario tiene el rol de Conductor pero no tiene un registro de Conductor vinculado en la base de datos. Contacta al Administrador.
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
