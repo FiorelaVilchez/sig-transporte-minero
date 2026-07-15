@@ -34,6 +34,12 @@ class DocumentoConductor(models.Model):
     def __str__(self):
         return f"{self.conductor.apellidos} - {self.tipo_documento} (Vence: {self.fecha_vencimiento})"
 
+    def save(self, *args, **kwargs):
+        from documents.services import calcular_estado_documento
+        self.estado_documento = calcular_estado_documento(self.fecha_vencimiento)
+        super().save(*args, **kwargs)
+
+
 
 class DocumentoVehiculo(models.Model):
     TIPO_DOCUMENTO_CHOICES = [
@@ -66,3 +72,9 @@ class DocumentoVehiculo(models.Model):
 
     def __str__(self):
         return f"{self.vehiculo.placa} - {self.tipo_documento} (Vence: {self.fecha_vencimiento})"
+
+    def save(self, *args, **kwargs):
+        from documents.services import calcular_estado_documento
+        self.estado_documento = calcular_estado_documento(self.fecha_vencimiento)
+        super().save(*args, **kwargs)
+

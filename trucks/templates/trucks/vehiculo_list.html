@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Registro de Vehículos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Messages Block -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-premium" role="alert">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h2 class="card-title mb-1"><i class="bi bi-truck text-accent me-2"></i>Gestión de Vehículos</h2>
+                    <p class="text-muted small mb-0">Visualiza, registra y programa el mantenimiento de los vehículos de la flota minera.</p>
+                </div>
+                {% if is_admin %}
+                    <a href="{% url 'trucks:vehiculo_create' %}" class="btn btn-accent d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-circle-fill"></i> Registrar Vehículo
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Filtros y Buscador -->
+            <form method="GET" action="{% url 'trucks:vehiculo_list' %}" class="row g-3 align-items-end mb-4 bg-light p-3 rounded">
+                <div class="col-md-5">
+                    <label for="searchInput" class="form-label font-monospace small fw-bold">Buscar por Placa o Tipo</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" id="searchInput" class="form-control border-start-0" placeholder="Ej. ABC-123..." value="{{ query }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label for="statusFilter" class="form-label font-monospace small fw-bold">Filtrar por Estado</label>
+                    <select name="estado" id="statusFilter" class="form-select">
+                        <option value="">-- Todos los estados --</option>
+                        {% for code, label in estado_choices %}
+                            <option value="{{ code }}" {% if estado_filtro == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-funnel-fill"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla de Vehículos -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border-top">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Placa</th>
+                            <th>Tipo de Vehículo</th>
+                            <th>Capacidad</th>
+                            <th>Próximo Mantenimiento</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for truck in page_obj %}
+                            <tr>
+                                <td class="font-monospace fw-bold text-primary">{{ truck.placa }}</td>
+                                <td>
+                                    <span class="fw-semibold">{{ truck.tipo }}</span>
+                                    {% if truck.homologacion %}
+                                        <div class="small text-muted"><span class="font-monospace text-secondary">Homol: {{ truck.homologacion }}</span></div>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ truck.capacidad }} (ton/pasajeros)</span></td>
+                                <td class="font-monospace text-secondary">
+                                    {% if truck.mantenimiento_programado %}
+                                        {{ truck.mantenimiento_programado|date:"d/m/Y" }}
+                                    {% else %}
+                                        <span class="text-muted small">No programado</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if truck.estado == 'Disponible' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ truck.estado }}</span>
+                                    {% elif truck.estado == 'En servicio' %}
+                                        <span class="badge bg-primary"><i class="bi bi-arrow-repeat me-1"></i>{{ truck.estado }}</span>
+                                    {% elif truck.estado == 'En mantenimiento' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-tools me-1"></i>{{ truck.estado }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ truck.estado }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="{% url 'trucks:vehiculo_detail' truck.pk %}" class="btn btn-sm btn-outline-secondary" title="Ver Detalle y Documentos">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </a>
+                                        {% if is_admin %}
+                                            <a href="{% url 'trucks:vehiculo_update' truck.pk %}" class="btn btn-sm btn-outline-primary" title="Editar Vehículo">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle-fill fs-4 d-block mb-2"></i>
+                                    No se encontraron vehículos registrados.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navegación de páginas" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query }}&estado={{ estado_filtro }}&page=1" aria-label="Primero">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query }}&estado={{ estado_filtro }}&page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?q={{ query }}&estado={{ estado_filtro }}&page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query }}&estado={{ estado_filtro }}&page={{ page_obj.next_page_number }}" aria-label="Siguiente">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query }}&estado={{ estado_filtro }}&page={{ page_obj.paginator.num_pages }}" aria-label="Último">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

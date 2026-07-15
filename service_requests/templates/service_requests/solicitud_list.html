@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Solicitudes de Servicio{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Messages Block -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-premium" role="alert">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h2 class="card-title mb-1"><i class="bi bi-clipboard-check-fill text-accent me-2"></i>Solicitudes de Servicio</h2>
+                    <p class="text-muted small mb-0">Gestión de las solicitudes de transporte registradas por los clientes.</p>
+                </div>
+                {% if is_admin %}
+                    <a href="{% url 'service_requests:solicitud_create' %}" class="btn btn-accent d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-circle-fill"></i> Nueva Solicitud
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Filtros -->
+            <form method="GET" action="{% url 'service_requests:solicitud_list' %}" class="row g-3 align-items-end mb-4 bg-light p-3 rounded">
+                <div class="col-md-4">
+                    <label for="statusFilter" class="form-label font-monospace small fw-bold">Filtrar por Estado</label>
+                    <select name="estado" id="statusFilter" class="form-select">
+                        <option value="">-- Todos los estados --</option>
+                        {% for code, label in estado_choices %}
+                            <option value="{{ code }}" {% if estado_filtro == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="priorityFilter" class="form-label font-monospace small fw-bold">Filtrar por Prioridad</label>
+                    <select name="prioridad" id="priorityFilter" class="form-select">
+                        <option value="">-- Todas las prioridades --</option>
+                        {% for code, label in prioridad_choices %}
+                            <option value="{{ code }}" {% if prioridad_filtro == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-funnel-fill"></i> Filtrar Solicitudes
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla de Solicitudes -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border-top">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nº Solicitud</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Origen &rarr; Destino</th>
+                            <th>Fecha/Hora Servicio</th>
+                            <th class="text-center">Prioridad</th>
+                            <th class="text-center">Estado</th>
+                            {% if is_admin %}
+                                <th class="text-end">Acciones</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in page_obj %}
+                            <tr>
+                                <td class="font-monospace fw-bold text-secondary">#{{ req.request_id }}</td>
+                                <td class="fw-bold">{{ req.cliente }}</td>
+                                <td>
+                                    <span class="d-block">{{ req.tipo_servicio }}</span>
+                                    <small class="text-muted">Requerido: {{ req.tipo_vehiculo_requerido }}</small>
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-primary"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ req.origen }}</div>
+                                    <div class="small text-success"><i class="bi bi-flag-fill text-success me-1"></i>{{ req.destino }}</div>
+                                </td>
+                                <td>
+                                    <div class="font-monospace fw-semibold">{{ req.fecha_servicio|date:"d/m/Y" }}</div>
+                                    <div class="font-monospace text-muted small">{{ req.hora_servicio|time:"H:i" }}</div>
+                                </td>
+                                <td class="text-center">
+                                    {% if req.prioridad == 'Alta' %}
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-octagon me-1"></i>{{ req.prioridad }}</span>
+                                    {% elif req.prioridad == 'Media' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>{{ req.prioridad }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info text-dark"><i class="bi bi-info-circle me-1"></i>{{ req.prioridad }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if req.estado_solicitud == 'Pendiente' %}
+                                        <span class="badge bg-secondary">{{ req.estado_solicitud }}</span>
+                                    {% elif req.estado_solicitud == 'Asignada' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>{{ req.estado_solicitud }}</span>
+                                    {% elif req.estado_solicitud == 'Reprogramada' %}
+                                        <span class="badge bg-warning text-dark">{{ req.estado_solicitud }}</span>
+                                    {% elif req.estado_solicitud == 'Completada' %}
+                                        <span class="badge bg-info text-dark">{{ req.estado_solicitud }}</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">{{ req.estado_solicitud }}</span>
+                                    {% endif %}
+                                </td>
+                                {% if is_admin %}
+                                    <td class="text-end">
+                                        <a href="{% url 'service_requests:solicitud_update' req.pk %}" class="btn btn-sm btn-outline-primary" title="Editar Solicitud">
+                                            <i class="bi bi-pencil-fill"></i> Editar
+                                        </a>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle-fill fs-4 d-block mb-2"></i>
+                                    No se encontraron solicitudes registradas.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navegación solicitudes" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?estado={{ estado_filtro }}&prioridad={{ prioridad_filtro }}&page=1">&laquo;&laquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?estado={{ estado_filtro }}&prioridad={{ prioridad_filtro }}&page={{ page_obj.previous_page_number }}">&laquo;</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?estado={{ estado_filtro }}&prioridad={{ prioridad_filtro }}&page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?estado={{ estado_filtro }}&prioridad={{ prioridad_filtro }}&page={{ page_obj.next_page_number }}">&raquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?estado={{ estado_filtro }}&prioridad={{ prioridad_filtro }}&page={{ page_obj.paginator.num_pages }}">&raquo;&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

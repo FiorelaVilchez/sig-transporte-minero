@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Módulo de Alertas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Messages Block -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show card-premium" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h2 class="card-title mb-1"><i class="bi bi-exclamation-triangle text-accent me-2"></i>Panel de Alertas Activas</h2>
+                    <p class="text-muted small mb-0">Consola de monitoreo de riesgos documentales y vigencia operativa del sistema.</p>
+                </div>
+                <div>
+                    <form action="{% url 'alerts:alerta_run_scan' %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-accent d-flex align-items-center gap-2">
+                            <i class="bi bi-arrow-repeat"></i> Actualizar Alertas Ahora
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <form method="GET" action="{% url 'alerts:alerta_list' %}" class="row g-3 align-items-end mb-4 bg-light p-3 rounded">
+                <div class="col-md-4">
+                    <label for="nivelFilter" class="form-label font-monospace small fw-bold">Filtrar por Riesgo</label>
+                    <select name="nivel_riesgo" id="nivelFilter" class="form-select">
+                        <option value="">-- Todos los niveles --</option>
+                        {% for code, label in nivel_choices %}
+                            <option value="{{ code }}" {% if nivel_filtro == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="tipoFilter" class="form-label font-monospace small fw-bold">Filtrar por Tipo de Alerta</label>
+                    <select name="tipo_alerta" id="tipoFilter" class="form-select">
+                        <option value="">-- Todos los tipos --</option>
+                        {% for code, label in tipo_choices %}
+                            <option value="{{ code }}" {% if tipo_filtro == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-funnel-fill"></i> Filtrar Alertas
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla de Alertas -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border-top">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Riesgo</th>
+                            <th>Tipo de Alerta</th>
+                            <th>Mensaje / Descripción</th>
+                            <th>Fecha Generación</th>
+                            <th>Origen/Vínculo</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in page_obj %}
+                            <tr>
+                                <td>
+                                    {% if alert.nivel_riesgo == 'Alto' %}
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-octagon me-1"></i>{{ alert.nivel_riesgo }}</span>
+                                    {% elif alert.nivel_riesgo == 'Medio' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>{{ alert.nivel_riesgo }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary"><i class="bi bi-info-circle me-1"></i>{{ alert.nivel_riesgo }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-secondary">{{ alert.tipo_alerta }}</span>
+                                </td>
+                                <td class="fw-bold">{{ alert.mensaje }}</td>
+                                <td class="font-monospace text-secondary small">{{ alert.fecha_generacion|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if alert.documento_conductor %}
+                                        <a href="{% url 'drivers:conductor_detail' alert.documento_conductor.conductor.pk %}" class="small">
+                                            <i class="bi bi-person-badge me-1"></i>{{ alert.documento_conductor.conductor.apellidos }}, {{ alert.documento_conductor.conductor.nombres }}
+                                        </a>
+                                    {% elif alert.documento_vehiculo %}
+                                        <a href="{% url 'trucks:vehiculo_detail' alert.documento_vehiculo.vehiculo.pk %}" class="small font-monospace">
+                                            <i class="bi bi-truck me-1"></i>{{ alert.documento_vehiculo.vehiculo.placa }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form action="{% url 'alerts:alerta_resolver' alert.pk %}" method="POST" onsubmit="return confirm('¿Está seguro de que desea marcar esta alerta como resuelta de forma manual?');" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-check-lg"></i> Resolver
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-shield-check text-success fs-3 d-block mb-2"></i>
+                                    ¡Excelente! No hay alertas activas en este momento.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navegación alertas" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?nivel_riesgo={{ nivel_filtro }}&tipo_alerta={{ tipo_filtro }}&page=1">&laquo;&laquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?nivel_riesgo={{ nivel_filtro }}&tipo_alerta={{ tipo_filtro }}&page={{ page_obj.previous_page_number }}">&laquo;</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?nivel_riesgo={{ nivel_filtro }}&tipo_alerta={{ tipo_filtro }}&page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?nivel_riesgo={{ nivel_filtro }}&tipo_alerta={{ tipo_filtro }}&page={{ page_obj.next_page_number }}">&raquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?nivel_riesgo={{ nivel_filtro }}&tipo_alerta={{ tipo_filtro }}&page={{ page_obj.paginator.num_pages }}">&raquo;&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

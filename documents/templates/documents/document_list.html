@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Control Documental{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Messages Block -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-premium" role="alert">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h2 class="card-title mb-1"><i class="bi bi-file-earmark-medical text-accent me-2"></i>Consola de Control Documental</h2>
+                    <p class="text-muted small mb-0">Audita, renueva y valida la vigencia de los documentos obligatorios de conductores y vehículos.</p>
+                </div>
+                <div class="d-inline-flex gap-2">
+                    <a href="{% url 'documents:documento_conductor_create' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge-fill"></i> + Doc Conductor
+                    </a>
+                    <a href="{% url 'documents:documento_vehiculo_create' %}" class="btn btn-outline-custom btn-sm d-flex align-items-center gap-2">
+                        <i class="bi bi-truck"></i> + Doc Vehículo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtros y Buscador unificados -->
+            <form method="GET" action="{% url 'documents:document_list' %}" class="row g-3 align-items-end mb-4 bg-light p-3 rounded">
+                <div class="col-md-5">
+                    <label for="searchInput" class="form-label font-monospace small fw-bold">Buscar por Titular o Placa</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" id="searchInput" class="form-control border-start-0" placeholder="Ej. Juan Pérez o ABC-123..." value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label for="statusFilter" class="form-label font-monospace small fw-bold">Filtrar por Estado de Vigencia</label>
+                    <select name="estado" id="statusFilter" class="form-select">
+                        <option value="">-- Todos los estados --</option>
+                        <option value="Vigente" {% if estado_filtro == 'Vigente' %}selected{% endif %}>Vigente</option>
+                        <option value="Por vencer" {% if estado_filtro == 'Por vencer' %}selected{% endif %}>Por vencer</option>
+                        <option value="Vencido" {% if estado_filtro == 'Vencido' %}selected{% endif %}>Vencido</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-funnel-fill"></i> Filtrar Consola
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabs de Navegación -->
+            <ul class="nav nav-tabs mb-4" id="documentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'conductores' %}active{% endif %} fw-bold" id="conductores-tab" data-bs-toggle="tab" data-bs-target="#conductores-pane" type="button" role="tab" aria-controls="conductores-pane" aria-selected="{% if active_tab == 'conductores' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-people-fill me-2"></i>Documentos de Conductores
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'vehiculos' %}active{% endif %} fw-bold" id="vehiculos-tab" data-bs-toggle="tab" data-bs-target="#vehiculos-pane" type="button" role="tab" aria-controls="vehiculos-pane" aria-selected="{% if active_tab == 'vehiculos' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-truck me-2"></i>Documentos de Vehículos
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="documentTabsContent">
+                <!-- Pestaña Conductores -->
+                <div class="tab-pane fade {% if active_tab == 'conductores' %}show active{% endif %}" id="conductores-pane" role="tabpanel" aria-labelledby="conductores-tab" tabindex="0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Conductor</th>
+                                    <th>Tipo de Documento</th>
+                                    <th>Fecha Emisión</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Archivo / Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in page_obj_cond %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'drivers:conductor_detail' doc.conductor.pk %}" class="fw-bold text-decoration-none">
+                                                {{ doc.conductor.apellidos }}, {{ doc.conductor.nombres }}
+                                            </a>
+                                            <div class="small text-muted font-monospace">DNI: {{ doc.conductor.dni }}</div>
+                                        </td>
+                                        <td class="fw-semibold text-secondary">{{ doc.tipo_documento }}</td>
+                                        <td class="font-monospace text-secondary small">{{ doc.fecha_emision|date:"d/m/Y" }}</td>
+                                        <td class="font-monospace fw-semibold">{{ doc.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td class="text-center">
+                                            {% if doc.estado_documento == 'Vigente' %}
+                                                <span class="badge bg-success">{{ doc.estado_documento }}</span>
+                                            {% elif doc.estado_documento == 'Por vencer' %}
+                                                <span class="badge bg-warning text-dark">{{ doc.estado_documento }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ doc.estado_documento }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if doc.archivo %}
+                                                <a href="{{ doc.archivo.url }}" class="btn btn-sm btn-accent" target="_blank" title="Ver / Descargar">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            {% endif %}
+                                            <a href="{% url 'documents:documento_conductor_update' doc.pk %}" class="btn btn-sm btn-outline-primary ms-1" title="Editar / Renovar">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No hay registros de documentos de conductores cargados.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación Conductores -->
+                    {% if page_obj_cond.has_other_pages %}
+                        <nav aria-label="Navegación conductores" class="mt-4">
+                            <ul class="pagination pagination-sm justify-content-center">
+                                {% if page_obj_cond.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_cond=1">&laquo;&laquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_cond={{ page_obj_cond.previous_page_number }}">&laquo;</a>
+                                    </li>
+                                {% endif %}
+                                {% for num in page_obj_cond.paginator.page_range %}
+                                    {% if page_obj_cond.number == num %}
+                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > page_obj_cond.number|add:'-3' and num < page_obj_cond.number|add:'3' %}
+                                        <li class="page-item"><a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_cond={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if page_obj_cond.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_cond={{ page_obj_cond.next_page_number }}">&raquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_cond={{ page_obj_cond.paginator.num_pages }}">&raquo;&raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+
+                <!-- Pestaña Vehículos -->
+                <div class="tab-pane fade {% if active_tab == 'vehiculos' %}show active{% endif %}" id="vehiculos-pane" role="tabpanel" aria-labelledby="vehiculos-tab" tabindex="0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Vehículo (Placa)</th>
+                                    <th>Tipo de Documento</th>
+                                    <th>Fecha Emisión</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Archivo / Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in page_obj_veh %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'trucks:vehiculo_detail' doc.vehiculo.pk %}" class="fw-bold text-decoration-none font-monospace">
+                                                {{ doc.vehiculo.placa }}
+                                            </a>
+                                            <div class="small text-muted">{{ doc.vehiculo.tipo }}</div>
+                                        </td>
+                                        <td class="fw-semibold text-secondary">{{ doc.tipo_documento }}</td>
+                                        <td class="font-monospace text-secondary small">{{ doc.fecha_emision|date:"d/m/Y" }}</td>
+                                        <td class="font-monospace fw-semibold">{{ doc.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td class="text-center">
+                                            {% if doc.estado_documento == 'Vigente' %}
+                                                <span class="badge bg-success">{{ doc.estado_documento }}</span>
+                                            {% elif doc.estado_documento == 'Por vencer' %}
+                                                <span class="badge bg-warning text-dark">{{ doc.estado_documento }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ doc.estado_documento }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if doc.archivo %}
+                                                <a href="{{ doc.archivo.url }}" class="btn btn-sm btn-accent" target="_blank" title="Ver / Descargar">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            {% endif %}
+                                            <a href="{% url 'documents:documento_vehiculo_update' doc.pk %}" class="btn btn-sm btn-outline-primary ms-1" title="Editar / Renovar">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No hay registros de documentos de vehículos cargados.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación Vehículos -->
+                    {% if page_obj_veh.has_other_pages %}
+                        <nav aria-label="Navegación vehículos" class="mt-4">
+                            <ul class="pagination pagination-sm justify-content-center">
+                                {% if page_obj_veh.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_veh=1">&laquo;&laquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_veh={{ page_obj_veh.previous_page_number }}">&laquo;</a>
+                                    </li>
+                                {% endif %}
+                                {% for num in page_obj_veh.paginator.page_range %}
+                                    {% if page_obj_veh.number == num %}
+                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > page_obj_veh.number|add:'-3' and num < page_obj_veh.number|add:'3' %}
+                                        <li class="page-item"><a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_veh={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if page_obj_veh.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_veh={{ page_obj_veh.next_page_number }}">&raquo;</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ search_query }}&estado={{ estado_filtro }}&page_veh={{ page_obj_veh.paginator.num_pages }}">&raquo;&raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

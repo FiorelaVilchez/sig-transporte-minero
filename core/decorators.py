@@ -39,5 +39,5 @@ def role_required(*allowed_roles):
             }, status=403)
         return _wrapped_view
     return decorator
-```
-,Description:
+
+

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}SIG — {{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'drivers:conductor_list' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> Volver a la Lista
+        </a>
+        <h2 class="mb-0 text-dark">{{ titulo }}</h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-premium accent-header">
+                <div class="card-body p-4">
+                    <form method="POST" novalidate class="needs-validation">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger card-premium">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0 small"><i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <!-- Nombres -->
+                            <div class="col-md-6">
+                                <label for="{{ form.nombres.id_for_label }}" class="form-label fw-semibold font-monospace small">Nombres</label>
+                                {% render_field form.nombres class="form-control" placeholder="Ej. Juan" %}
+                                {% if form.nombres.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.nombres.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Apellidos -->
+                            <div class="col-md-6">
+                                <label for="{{ form.apellidos.id_for_label }}" class="form-label fw-semibold font-monospace small">Apellidos</label>
+                                {% render_field form.apellidos class="form-control" placeholder="Ej. Pérez Quispe" %}
+                                {% if form.apellidos.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.apellidos.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- DNI -->
+                            <div class="col-md-6">
+                                <label for="{{ form.dni.id_for_label }}" class="form-label fw-semibold font-monospace small">DNI (8 dígitos)</label>
+                                {% render_field form.dni class="form-control font-monospace" placeholder="Ej. 12345678" maxlength="8" %}
+                                {% if form.dni.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.dni.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Licencia -->
+                            <div class="col-md-6">
+                                <label for="{{ form.licencia.id_for_label }}" class="form-label fw-semibold font-monospace small">Número de Licencia</label>
+                                {% render_field form.licencia class="form-control font-monospace" placeholder="Ej. Q12345678" %}
+                                {% if form.licencia.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.licencia.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Especialidad -->
+                            <div class="col-md-6">
+                                <label for="{{ form.especialidad.id_for_label }}" class="form-label fw-semibold font-monospace small">Especialidad</label>
+                                {% render_field form.especialidad class="form-control" placeholder="Ej. Camión volquete, Semirremolque..." %}
+                                {% if form.especialidad.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.especialidad.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="col-md-6">
+                                <label for="{{ form.estado.id_for_label }}" class="form-label fw-semibold font-monospace small">Estado Inicial</label>
+                                {% render_field form.estado class="form-select" %}
+                                {% if form.estado.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.estado.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="col-md-6">
+                                <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold font-monospace small">Teléfono / Celular</label>
+                                {% render_field form.telefono class="form-control" placeholder="Ej. 987654321" %}
+                                {% if form.telefono.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.telefono.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Fecha de Nacimiento -->
+                            <div class="col-md-6">
+                                <label for="{{ form.fecha_nacimiento.id_for_label }}" class="form-label fw-semibold font-monospace small">Fecha de Nacimiento</label>
+                                {% render_field form.fecha_nacimiento class="form-control font-monospace" %}
+                                {% if form.fecha_nacimiento.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.fecha_nacimiento.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Fecha de Ingreso -->
+                            <div class="col-md-6">
+                                <label for="{{ form.fecha_ingreso.id_for_label }}" class="form-label fw-semibold font-monospace small">Fecha de Ingreso a la Empresa</label>
+                                {% render_field form.fecha_ingreso class="form-control font-monospace" %}
+                                {% if form.fecha_ingreso.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.fecha_ingreso.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'drivers:conductor_list' %}" class="btn btn-light">Cancelar</a>
+                            <button type="submit" class="btn btn-accent px-4">
+                                <i class="bi bi-save-fill me-1"></i> Guardar Conductor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

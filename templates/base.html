@@ -78,35 +78,38 @@
                     <!-- Dashboard operativo: Administrador, Supervisor, Gerencia -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
-                        <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-speedometer2"></i> Dashboard Operativo
                         </a>
                     </li>
                     {% endif %}
 
-                    <!-- Conductores / Vehículos / Solicitudes / Asignación automática: Administrador de operaciones -->
-                    {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
+                    <!-- Conductores y Vehículos: Administrador de operaciones, Supervisor -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'drivers:conductor_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'drivers' %}active{% endif %}">
                             <i class="bi bi-people"></i> Registro de Conductores
                         </a>
                     </li>
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'trucks:vehiculo_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'trucks' %}active{% endif %}">
                             <i class="bi bi-truck"></i> Registro de Vehículos
                         </a>
                     </li>
+                    {% endif %}
+
+                    <!-- Registro de Solicitudes: Administrador de operaciones, Supervisor, Gerencia -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'service_requests:solicitud_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'service_requests' %}active{% endif %}">
                             <i class="bi bi-clipboard-check"></i> Registro de Solicitudes
                         </a>
                     </li>
+                    {% endif %}
+
+                    <!-- Asignación automática: Administrador de operaciones -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
-                        <!-- TODO fase 6 -->
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-cpu"></i> Asignación Automática
                         </a>
@@ -116,18 +119,17 @@
                     <!-- Control documental / Alertas: Administrador, Supervisor -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'documents:document_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'documents' %}active{% endif %}">
                             <i class="bi bi-file-earmark-medical"></i> Control Documental
                         </a>
                     </li>
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'alerts:alerta_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'alerts' %}active{% endif %}">
                             <i class="bi bi-exclamation-triangle"></i> Alertas
                         </a>
                     </li>
                     {% endif %}
+
 
                     <!-- Reportes Gerenciales (Power BI): Gerencia, Administrador -->
                     {% if user.perfilusuario.rol == 'Gerencia' or user.perfilusuario.rol == 'Administrador de operaciones' %}

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Detalle del Vehículo{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Messages Block -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-premium" role="alert">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'trucks:vehiculo_list' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> Volver a la Flota
+        </a>
+        <h2 class="mb-0 text-dark">Detalle de Unidad de Flota</h2>
+    </div>
+
+    <div class="row g-4">
+        <!-- Panel de Especificaciones Técnicas -->
+        <div class="col-lg-4">
+            <div class="card card-premium mb-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 text-center">
+                    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-truck text-primary fs-1"></i>
+                    </div>
+                    <h4 class="card-title mb-1">Unidad Flota</h4>
+                    <h5 class="text-primary font-monospace fw-bold mb-2">{{ vehiculo.placa }}</h5>
+                    
+                    {% if vehiculo.estado == 'Disponible' %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ vehiculo.estado }}</span>
+                    {% elif vehiculo.estado == 'En servicio' %}
+                        <span class="badge bg-primary"><i class="bi bi-arrow-repeat me-1"></i>{{ vehiculo.estado }}</span>
+                    {% elif vehiculo.estado == 'En mantenimiento' %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-tools me-1"></i>{{ vehiculo.estado }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ vehiculo.estado }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <span class="text-muted d-block small font-monospace fw-bold">Tipo</span>
+                            <span class="fw-semibold">{{ vehiculo.tipo }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block small font-monospace fw-bold">Capacidad</span>
+                            <span class="fw-semibold">{{ vehiculo.capacidad }} (ton/pasajeros)</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted d-block small font-monospace fw-bold">Código Homologación</span>
+                            <span class="font-monospace text-secondary fw-semibold">{{ vehiculo.homologacion|default:"No homologado" }}</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted d-block small font-monospace fw-bold">Mantenimiento Programado</span>
+                            <span class="font-monospace text-secondary fw-semibold">
+                                {% if vehiculo.mantenimiento_programado %}
+                                    {{ vehiculo.mantenimiento_programado|date:"d \d\e F \d\e Y" }}
+                                {% else %}
+                                    <span class="text-muted italic">No programado</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block small font-monospace fw-bold">Rev. Técnica Vigente</span>
+                            <span>
+                                {% if vehiculo.revision_tecnica_vigente %}
+                                    <span class="text-success"><i class="bi bi-patch-check-fill"></i> Sí</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="bi bi-patch-exclamation-fill"></i> No</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block small font-monospace fw-bold">Seguro Vigente</span>
+                            <span>
+                                {% if vehiculo.seguro_vigente %}
+                                    <span class="text-success"><i class="bi bi-patch-check-fill"></i> Sí</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="bi bi-patch-exclamation-fill"></i> No</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if is_admin %}
+                        <hr class="my-4">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'trucks:vehiculo_update' vehiculo.pk %}" class="btn btn-primary d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-pencil-fill"></i> Editar Datos
+                            </a>
+                            
+                            {% if vehiculo.estado != 'De baja' %}
+                                <form action="{% url 'trucks:vehiculo_dar_baja' vehiculo.pk %}" method="POST" onsubmit="return confirm('¿Está seguro de que desea dar de baja a esta unidad?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-warning w-100 d-flex align-items-center justify-content-center gap-2">
+                                        <i class="bi bi-slash-circle-fill"></i> Dar de Baja (Inactivar)
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            <button type="button" class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash-fill"></i> Eliminar Vehículo
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Documentos Habilitantes del Vehículo -->
+        <div class="col-lg-8">
+            <div class="card card-premium">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                        <h4 class="card-title mb-0"><i class="bi bi-file-earmark-medical-fill text-accent me-2"></i>Documentación Obligatoria</h4>
+                        {% if is_admin or request.user.perfilusuario.rol == 'Supervisor' %}
+                            <a href="{% url 'documents:documento_vehiculo_create' %}?vehiculo={{ vehiculo.pk }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2">
+                                <i class="bi bi-plus-circle-fill"></i> Agregar Documento
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tipo de Documento</th>
+                                    <th>Emisión</th>
+                                    <th>Vencimiento</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Archivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in documentos %}
+                                    <tr>
+                                        <td class="fw-bold">{{ doc.tipo_documento }}</td>
+                                        <td>{{ doc.fecha_emision|date:"d/m/Y" }}</td>
+                                        <td>{{ doc.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td class="text-center">
+                                            {% if doc.estado_documento == 'Vigente' %}
+                                                <span class="badge bg-success">{{ doc.estado_documento }}</span>
+                                            {% elif doc.estado_documento == 'Por vencer' %}
+                                                <span class="badge bg-warning text-dark">{{ doc.estado_documento }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ doc.estado_documento }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if doc.archivo %}
+                                                <a href="{{ doc.archivo.url }}" class="btn btn-sm btn-accent" target="_blank" title="Descargar / Ver Archivo">
+                                                    <i class="bi bi-download"></i> Descargar
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted small">Sin adjunto</span>
+                                            {% endif %}
+                                            {% if is_admin or request.user.perfilusuario.rol == 'Supervisor' %}
+                                                <a href="{% url 'documents:documento_vehiculo_update' doc.pk %}" class="btn btn-sm btn-outline-primary ms-1" title="Renovar / Editar">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="bi bi-file-earmark-lock-fill fs-3 d-block mb-2"></i>
+                                            Este vehículo no cuenta con documentos registrados en el sistema.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Eliminación -->
+{% if is_admin %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-premium">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="deleteModalLabel"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p>¿Está seguro de que desea eliminar permanentemente al vehículo con placa <strong>{{ vehiculo.placa }}</strong>?</p>
+                <div class="alert alert-warning text-dark small mb-0">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <strong>Nota:</strong> Si la unidad posee registros históricos de asignaciones, Django bloqueará la eliminación física para proteger la trazabilidad. En ese caso, deberá <strong>darlo de baja</strong>.
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{% url 'trucks:vehiculo_delete' vehiculo.pk %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar Definitivamente</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
