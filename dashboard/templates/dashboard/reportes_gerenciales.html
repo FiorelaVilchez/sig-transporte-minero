@@ -4,17 +4,19 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Messages Block -->
+
+    <!-- ── Mensajes ──────────────────────────────────────────────── -->
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-premium" role="alert">
                 <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
                 {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         {% endfor %}
     {% endif %}
 
+    <!-- ── 1. Cabecera + Exportación CSV ─────────────────────────── -->
     <div class="card card-premium accent-header mb-4">
         <div class="card-body">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
@@ -23,10 +25,10 @@
                         <i class="bi bi-graph-up text-accent me-2"></i>Reportes Gerenciales e Integración Power BI
                     </h2>
                     <p class="text-muted small mb-0">
-                        Exporta datos operativos a archivos CSV optimizados para su consumo directo por Power BI Desktop.
+                        Exporta datos a CSV para Power BI y sube el resultado del dashboard aquí.
                     </p>
                 </div>
-                <div class="d-inline-flex gap-2">
+                <div class="d-inline-flex gap-2 flex-wrap">
                     {% if puede_regenerar %}
                         <form action="{% url 'dashboard:generar_csv' %}" method="POST" class="d-inline">
                             {% csrf_token %}
@@ -40,41 +42,36 @@
                     </a>
                 </div>
             </div>
-            
-            <div class="alert alert-info border-0 rounded p-3 mb-4" style="background-color: rgba(27, 42, 56, 0.05); color: var(--text-dark);">
+
+            <div class="alert alert-info border-0 rounded p-3 mb-3" style="background-color: rgba(27,42,56,.05); color:var(--text-dark);">
                 <i class="bi bi-info-circle-fill text-primary me-2"></i>
-                <strong>Flujo de trabajo para Power BI Desktop:</strong>
-                Los archivos se exportan codificados en UTF-8-SIG en la carpeta <code>exports/</code> en la raíz del proyecto.
-                Power BI Desktop leerá directamente estos archivos desde esa ubicación una vez generado el origen.
+                <strong>Flujo de trabajo:</strong>
+                Genera los CSV → ábrelos en Power BI Desktop siguiendo
+                <a href="https://github.com/FiorelaVilchez/sig-transporte-minero/blob/main/docs/manual_powerbi.md" target="_blank" class="fw-bold">docs/manual_powerbi.md</a>
+                → exporta a PDF → súbelo abajo.
             </div>
 
-            <!-- Tabla de Archivos CSV -->
-            <div class="table-responsive mt-3">
-                <table class="table table-hover align-middle border-top">
+            <!-- Tabla de archivos CSV -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border-top mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Archivo CSV</th>
-                            <th>Uso / Contenido</th>
+                            <th>Contenido</th>
                             <th class="text-center">Filas</th>
-                            <th>Última Generación</th>
+                            <th>Última generación</th>
                             <th class="text-end">Descarga</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for info in archivos_info %}
                             <tr>
-                                <td>
-                                    <span class="fw-bold font-monospace text-primary">{{ info.filename }}</span>
-                                </td>
-                                <td>
-                                    <span class="small text-muted">{{ info.description }}</span>
-                                </td>
+                                <td><span class="fw-bold font-monospace text-primary">{{ info.filename }}</span></td>
+                                <td><span class="small text-muted">{{ info.description }}</span></td>
                                 <td class="text-center">
-                                    {% if info.exists %}
-                                        <span class="badge bg-success font-monospace">{{ info.rows }}</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary font-monospace">0</span>
-                                    {% endif %}
+                                    <span class="badge {% if info.exists %}bg-success{% else %}bg-secondary{% endif %} font-monospace">
+                                        {{ info.rows }}
+                                    </span>
                                 </td>
                                 <td>
                                     <span class="small font-monospace {% if info.exists %}text-dark{% else %}text-muted{% endif %}">
@@ -82,7 +79,8 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <a href="{% url 'dashboard:descargar_csv' info.filename %}" class="btn btn-sm btn-outline-custom" title="Descargar archivo individual">
+                                    <a href="{% url 'dashboard:descargar_csv' info.filename %}"
+                                       class="btn btn-sm btn-outline-custom">
                                         <i class="bi bi-download"></i> Descargar
                                     </a>
                                 </td>
@@ -93,5 +91,195 @@
             </div>
         </div>
     </div>
+
+    <!-- ── 2. Reporte más reciente ────────────────────────────────── -->
+    {% if reporte_reciente %}
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-bar-chart-line-fill text-accent me-2"></i>Dashboard Gerencial (versión más reciente)
+                </h3>
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                    <i class="bi bi-clock me-1"></i>{{ reporte_reciente.fecha_subida|date:"d/m/Y H:i" }}
+                    &nbsp;·&nbsp;{{ reporte_reciente.subido_por.get_full_name|default:reporte_reciente.subido_por.username }}
+                </span>
+            </div>
+
+            {% if reporte_reciente.descripcion %}
+                <p class="text-muted small mb-3">{{ reporte_reciente.descripcion }}</p>
+            {% endif %}
+
+            <!-- PDF embebido -->
+            {% if reporte_reciente.tiene_pdf %}
+                <div class="mb-3">
+                    <embed src="{{ reporte_reciente.archivo_pdf.url }}"
+                           type="application/pdf"
+                           width="100%" height="640px"
+                           style="border:1px solid var(--border-color); border-radius:8px;">
+                    <div class="mt-2">
+                        <a href="{{ reporte_reciente.archivo_pdf.url }}" class="btn btn-sm btn-outline-custom" download>
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar PDF
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Galería de capturas -->
+            {% if reporte_reciente.tiene_capturas %}
+                <h5 class="mt-3 mb-3 small text-uppercase text-muted letter-spacing-1">
+                    <i class="bi bi-images me-1"></i> Capturas de pantalla
+                </h5>
+                {% with capturas=reporte_reciente.capturas.all %}
+                {% if capturas|length == 1 %}
+                    <img src="{{ capturas.0.imagen.url }}" class="img-fluid rounded shadow-sm"
+                         alt="Captura 1" style="max-height:600px; width:auto; display:block; margin:auto;">
+                {% else %}
+                    <div id="carouselReporte" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-indicators">
+                            {% for c in capturas %}
+                                <button type="button" data-bs-target="#carouselReporte"
+                                        data-bs-slide-to="{{ forloop.counter0 }}"
+                                        {% if forloop.first %}class="active" aria-current="true"{% endif %}
+                                        aria-label="Captura {{ forloop.counter }}"></button>
+                            {% endfor %}
+                        </div>
+                        <div class="carousel-inner" style="background:#000; border-radius:8px;">
+                            {% for c in capturas %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <img src="{{ c.imagen.url }}" class="d-block mx-auto"
+                                         alt="Captura {{ forloop.counter }}"
+                                         style="max-height:580px; object-fit:contain;">
+                                    <div class="carousel-caption d-none d-md-block">
+                                        <small>{{ forloop.counter }} / {{ capturas|length }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselReporte" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselReporte" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    </div>
+                {% endif %}
+                {% endwith %}
+            {% endif %}
+
+            {% if not reporte_reciente.tiene_pdf and not reporte_reciente.tiene_capturas %}
+                <div class="text-muted small"><i class="bi bi-exclamation-circle me-1"></i>Este reporte no tiene archivos adjuntos.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card card-premium mb-4">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-graph-up display-4 text-muted opacity-50"></i>
+            <p class="mt-3 text-muted">Aún no se ha subido ningún reporte gerencial.</p>
+            <p class="small text-muted">
+                Sigue el manual <code>docs/manual_powerbi.md</code>, exporta el resultado a PDF desde Power BI Desktop y súbelo aquí.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 3. Formulario de subida ───────────────────────────────── -->
+    {% if puede_subir %}
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <h3 class="card-title mb-3">
+                <i class="bi bi-cloud-upload-fill text-accent me-2"></i>Subir nuevo reporte
+            </h3>
+            <p class="small text-muted mb-3">
+                Puedes subir el <strong>PDF exportado desde Power BI Desktop</strong> (Archivo → Exportar → Exportar a PDF),
+                una o varias <strong>capturas de pantalla</strong>, o ambos.
+            </p>
+
+            <form action="{% url 'dashboard:subir_reporte' %}" method="POST" enctype="multipart/form-data" id="form-subir-reporte">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_descripcion" class="form-label fw-semibold">Descripción <span class="text-muted fw-normal">(opcional)</span></label>
+                    <input type="text" name="descripcion" id="id_descripcion"
+                           class="form-control"
+                           placeholder="Dashboard gerencial — Sprint 5">
+                </div>
+                <div class="mb-3">
+                    <label for="id_archivo_pdf" class="form-label fw-semibold">Reporte PDF <span class="text-muted fw-normal">(opcional)</span></label>
+                    <input type="file" name="archivo_pdf" id="id_archivo_pdf"
+                           class="form-control" accept="application/pdf,.pdf">
+                    <div class="form-text">PDF exportado desde Power BI Desktop.</div>
+                </div>
+                <div class="mb-4">
+                    <label for="id_capturas" class="form-label fw-semibold">Capturas de pantalla <span class="text-muted fw-normal">(opcional, pueden ser varias)</span></label>
+                    <input type="file" name="capturas" id="id_capturas"
+                           class="form-control" accept="image/*" multiple>
+                    <div class="form-text">PNG o JPG. Mantén <kbd>Ctrl</kbd> para seleccionar varias imágenes a la vez.</div>
+                </div>
+                <p class="small text-danger mb-3">* Debes adjuntar al menos un PDF o una captura.</p>
+                <button type="submit" class="btn btn-accent d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-upload"></i> Subir reporte
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 4. Historial de reportes ──────────────────────────────── -->
+    {% if historial_reportes %}
+    <div class="card card-premium mb-4">
+        <div class="card-body">
+            <h3 class="card-title mb-3">
+                <i class="bi bi-clock-history text-accent me-2"></i>Historial de reportes anteriores
+            </h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border-top mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Descripción</th>
+                            <th>Subido por</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Tipo</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reporte in historial_reportes %}
+                        <tr>
+                            <td class="text-muted small font-monospace">{{ reporte.pk }}</td>
+                            <td>{{ reporte.descripcion|default:"Sin descripción" }}</td>
+                            <td>{{ reporte.subido_por.get_full_name|default:reporte.subido_por.username }}</td>
+                            <td>
+                                <span class="small font-monospace">{{ reporte.fecha_subida|date:"d/m/Y H:i" }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if reporte.tiene_pdf %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                    </span>
+                                {% endif %}
+                                {% if reporte.tiene_capturas %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        <i class="bi bi-images me-1"></i>{{ reporte.capturas.count }} img
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if reporte.tiene_pdf %}
+                                    <a href="{{ reporte.archivo_pdf.url }}" class="btn btn-sm btn-outline-custom" download>
+                                        <i class="bi bi-download"></i> PDF
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
