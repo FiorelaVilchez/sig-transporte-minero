@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignación Manual — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1 fw-bold text-dark">Asignación Manual de Recursos</h1>
+            <p class="text-muted mb-0">Selección directa de conductor y vehículo para la solicitud de servicio.</p>
+            <hr class="mt-3">
+        </div>
+    </div>
+
+    <!-- Error Alert block -->
+    {% if error_validacion %}
+    <div class="alert alert-danger" role="alert">
+        <h5 class="alert-heading fw-bold"><i class="bi bi-x-octagon-fill me-2"></i>Asignación Rechazada por Reglas de Negocio</h5>
+        <p class="mb-2">La combinación seleccionada no puede registrarse debido a los siguientes bloqueos documentales:</p>
+        <ul class="mb-0 font-monospace" style="font-size: 0.9rem;">
+            {% for bloqueo in resultado.bloqueos %}
+                <li><strong>{{ bloqueo }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Solicitud Info Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="card-title text-white mb-0"><i class="bi bi-clipboard-check me-2"></i>Detalle de Solicitud</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold mb-1">Cliente:</h6>
+                    <p class="text-primary fs-5 fw-bold mb-3">{{ solicitud.cliente }}</p>
+
+                    <h6 class="fw-bold mb-1">Fecha y Hora de Servicio:</h6>
+                    <p class="text-dark mb-3">
+                        <i class="bi bi-calendar-event me-1"></i> {{ solicitud.fecha_servicio|date:"d/m/Y" }} a las 
+                        <i class="bi bi-clock me-1"></i> {{ solicitud.hora_servicio|time:"H:i" }}
+                    </p>
+
+                    <h6 class="fw-bold mb-1">Ruta:</h6>
+                    <p class="text-dark mb-3">
+                        <span class="badge bg-light text-dark">{{ solicitud.origen }}</span> 
+                        <i class="bi bi-arrow-right mx-1"></i> 
+                        <span class="badge bg-light text-dark">{{ solicitud.destino }}</span>
+                    </p>
+
+                    <h6 class="fw-bold mb-1">Vehículo Requerido:</h6>
+                    <p class="mb-3">
+                        <span class="badge bg-dark font-monospace fs-6"><i class="bi bi-truck me-1"></i>{{ solicitud.tipo_vehiculo_requerido }}</span>
+                    </p>
+
+                    <h6 class="fw-bold mb-1">Prioridad:</h6>
+                    <p class="mb-0">
+                        {% if solicitud.prioridad == 'Alta' %}
+                            <span class="badge bg-danger">{{ solicitud.prioridad }}</span>
+                        {% elif solicitud.prioridad == 'Media' %}
+                            <span class="badge bg-warning text-dark">{{ solicitud.prioridad }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ solicitud.prioridad }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form and Selection Column -->
+        <div class="col-lg-8">
+            {% if confirmar_paso %}
+            <!-- STEP 2: CONFIRMATION STEP -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-shield-exclamation me-2"></i>Confirmación de Asignación</h5>
+                </div>
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Resultados del Diagnóstico de Reglas de Negocio</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <h6 class="fw-bold text-muted small mb-1">Conductor Seleccionado:</h6>
+                                <p class="mb-0 fw-bold">{{ conductor_seleccionado }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <h6 class="fw-bold text-muted small mb-1">Vehículo Seleccionado:</h6>
+                                <p class="mb-0 fw-bold">{{ vehiculo_seleccionado.tipo }} ({{ vehiculo_seleccionado.placa }})</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Veredicto de Validación:</h6>
+                        {% if resultado.veredicto == 'Aprobada' %}
+                            <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i>Aprobada</span>
+                            <p class="text-success small mt-2">El conductor y vehículo cumplen con el 100% de los requisitos y vigencias documentales.</p>
+                        {% elif resultado.veredicto == 'Observada' %}
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>Observada</span>
+                            <p class="text-warning small mt-2">La asignación se puede registrar, pero existen advertencias de documentos próximos a vencer.</p>
+                        {% endif %}
+                    </div>
+
+                    {% if resultado.observaciones %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Advertencias Registradas (R3):</h6>
+                        <ul class="font-monospace text-muted small">
+                            {% for obs in resultado.observaciones %}
+                                <li>{{ obs }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if tipo_discrepancia %}
+                    <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
+                        <div>
+                            <strong>Advertencia de Tipo:</strong> El vehículo seleccionado es de tipo <strong>{{ vehiculo_seleccionado.tipo }}</strong>, pero la solicitud requiere una unidad de tipo <strong>{{ solicitud.tipo_vehiculo_requerido }}</strong>.
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="conductor" value="{{ conductor_seleccionado.driver_id }}">
+                        <input type="hidden" name="vehiculo" value="{{ vehiculo_seleccionado.truck_id }}">
+                        <input type="hidden" name="confirmado" value="true">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-accent px-4">
+                                <i class="bi bi-check-circle-fill me-1"></i> Confirmar Asignación
+                            </button>
+                            <a href="{% url 'assignments:asignar_manual' solicitud.request_id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar / Elegir otro
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- STEP 1: SELECTION STEP -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-gear-fill me-2"></i>Selección de Recursos</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Conductor select -->
+                        <div class="mb-3">
+                            <label for="conductorSelect" class="form-label fw-bold small text-muted">Conductor Disponible:</label>
+                            <select name="conductor" id="conductorSelect" class="form-select" required>
+                                <option value="" disabled selected>-- Seleccione Conductor --</option>
+                                {% for cond in conductores %}
+                                    <option value="{{ cond.driver_id }}" {% if conductor_seleccionado.driver_id == cond.driver_id %}selected{% endif %}>
+                                        {{ cond.apellidos }}, {{ cond.nombres }} (DNI: {{ cond.dni }} | Especialidad: {{ cond.especialidad }})
+                                    </option>
+                                {% endfor %}/
+                            </select>
+                        </div>
+
+                        <!-- Vehículo select -->
+                        <div class="mb-4">
+                            <label for="vehiculoSelect" class="form-label fw-bold small text-muted">Vehículo Disponible:</label>
+                            <select name="vehiculo" id="vehiculoSelect" class="form-select" required>
+                                <option value="" disabled selected>-- Seleccione Vehículo --</option>
+                                {% for veh in vehiculos %}
+                                    <option value="{{ veh.truck_id }}" {% if vehiculo_seleccionado.truck_id == veh.truck_id %}selected{% endif %}>
+                                        Placa: {{ veh.placa }} ({{ veh.tipo }} | Capacidad: {{ veh.capacidad }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text text-muted">Nota: Priorice elegir unidades que coincidan con la capacidad y tipo solicitado.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-accent px-4">
+                                <i class="bi bi-shield-check me-1"></i> Verificar Asignación
+                            </button>
+                            <a href="{% url 'assignments:solicitudes_pendientes' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Volver a la Lista
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

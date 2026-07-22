@@ -75,6 +75,15 @@
                         </a>
                     </li>
 
+                    <!-- Mis Servicios: Conductor -->
+                    {% if user.perfilusuario.rol == 'Conductor' %}
+                    <li>
+                        <a href="{% url 'assignments:mis_servicios' %}" class="sidebar-link {% if request.resolver_match.url_name == 'mis_servicios' %}active{% endif %}">
+                            <i class="bi bi-calendar-check"></i> Mis Servicios
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <!-- Dashboard operativo: Administrador, Supervisor, Gerencia -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
@@ -110,7 +119,7 @@
                     <!-- Asignación automática: Administrador de operaciones -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'assignments:solicitudes_pendientes' %}" class="sidebar-link {% if request.resolver_match.app_name == 'assignments' and request.resolver_match.url_name != 'mis_servicios' %}active{% endif %}">
                             <i class="bi bi-cpu"></i> Asignación Automática
                         </a>
                     </li>

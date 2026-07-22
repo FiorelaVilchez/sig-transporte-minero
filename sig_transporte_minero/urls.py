@@ -27,6 +27,7 @@ urlpatterns = [
     path('documents/', include('documents.urls')),
     path('service-requests/', include('service_requests.urls')),
     path('alerts/', include('alerts.urls')),
+    path('assignments/', include('assignments.urls')),
 ]
 
 if settings.DEBUG:

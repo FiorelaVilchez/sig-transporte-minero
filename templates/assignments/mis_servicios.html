@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Servicios y Documentos — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    {% if error_vinculo %}
+    <div class="row mt-5 justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden" style="border-top: 5px solid #d9534f !important;">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-fill-slash text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">Error de Vinculación de Cuenta</h4>
+                    <p class="text-muted mb-0">
+                        Tu cuenta de usuario posee el rol de Conductor, pero no se encuentra vinculada a un registro de Conductor activo. Contacta al Administrador de Operaciones para subsanar la vinculación.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1 fw-bold text-dark">Portal del Conductor</h1>
+            <p class="text-muted mb-0">Bienvenido, {{ conductor.nombres }} {{ conductor.apellidos }} | Licencia: <span class="font-monospace text-dark fw-bold">{{ conductor.licencia }}</span></p>
+            <hr class="mt-3">
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Column: Services and Notifications -->
+        <div class="col-lg-8">
+            
+            <!-- SECTION: NOTIFICACIONES -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-bell-fill text-accent me-2"></i>Notificaciones Recientes</h5>
+                </div>
+                <div class="card-body">
+                    {% if notificaciones %}
+                        <div class="list-group list-group-flush">
+                            {% for notif in notificaciones %}
+                            <div class="list-group-item px-0 py-3 d-flex align-items-start justify-content-between {% if not notif.leida %}bg-light-accent border-start border-3 border-warning ps-2{% endif %}">
+                                <div class="me-3">
+                                    <p class="mb-1 text-dark">{{ notif.mensaje }}</p>
+                                    <small class="text-muted font-monospace"><i class="bi bi-clock"></i> {{ notif.fecha|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                {% if not notif.leida %}
+                                    <a href="{% url 'assignments:leer_notificacion' notif.id %}" class="btn btn-xs btn-outline-custom">
+                                        <i class="bi bi-check-lg"></i> Leer
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary">Leída</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0 text-center py-3">No tienes notificaciones pendientes.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION: SERVICIOS ASIGNADOS -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-clipboard-check me-2"></i>Mis Servicios Asignados</h5>
+                </div>
+                <div class="card-body">
+                    {% if asignaciones %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Asignación</th>
+                                    <th>Cliente / Servicio</th>
+                                    <th>Fecha / Hora</th>
+                                    <th>Ruta</th>
+                                    <th>Vehículo</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for asig in asignaciones %}
+                                <tr>
+                                    <td><strong>#{{ asig.assignment_id }}</strong></td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ asig.solicitud.cliente }}</div>
+                                        <small class="text-muted">{{ asig.solicitud.tipo_servicio }}</small>
+                                    </td>
+                                    <td>
+                                        <div>{{ asig.solicitud.fecha_servicio|date:"d/m/Y" }}</div>
+                                        <small class="text-muted">{{ asig.solicitud.hora_servicio|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="small">{{ asig.solicitud.origen }}</div>
+                                        <div class="text-muted small"><i class="bi bi-arrow-right"></i> {{ asig.solicitud.destino }}</div>
+                                    </td>
+                                    <td>
+                                        {% if asig.vehiculo %}
+                                            <span class="badge bg-secondary font-monospace">{{ asig.vehiculo.placa }}</span>
+                                            <div class="small text-muted" style="font-size:0.75rem;">{{ asig.vehiculo.tipo }}</div>
+                                        {% else %}
+                                            <span class="text-muted italic">Sin vehículo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if asig.solicitud.estado_solicitud == 'Asignada' %}
+                                            <span class="badge bg-primary">Programado</span>
+                                        {% elif asig.solicitud.estado_solicitud == 'Completada' %}
+                                            <span class="badge bg-success">Completado</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ asig.solicitud.estado_solicitud }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-calendar-x text-muted" style="font-size: 2.5rem;"></i>
+                        <h6 class="mt-2 text-dark mb-0">No posees servicios de transporte asignados en este momento.</h6>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar Column: Document Status -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="card-title text-white mb-0 fw-bold"><i class="bi bi-file-earmark-medical-fill text-accent me-2"></i>Mis Documentos</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Verifique el vencimiento de su documentación obligatoria requerida por las unidades mineras.</p>
+                    
+                    {% if documentos %}
+                        <div class="list-group list-group-flush">
+                            {% for doc in documentos %}
+                            <div class="list-group-item px-0 py-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="mb-0 fw-bold text-dark">{{ doc.tipo_documento }}</h6>
+                                    {% if doc.estado_documento == 'Vigente' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>{{ doc.estado_documento }}</span>
+                                    {% elif doc.estado_documento == 'Por vencer' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ doc.estado_documento }}</span>
+                                    {% elif doc.estado_documento == 'Vencido' %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i>{{ doc.estado_documento }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="row small text-muted font-monospace">
+                                    <div class="col-6">Emisión: {{ doc.fecha_emision|date:"d/m/Y" }}</div>
+                                    <div class="col-6 text-end">Vence: {{ doc.fecha_vencimiento|date:"d/m/Y" }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>No registra documentación en el sistema.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

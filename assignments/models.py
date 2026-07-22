@@ -28,3 +28,19 @@ class Asignacion(models.Model):
 
     def __str__(self):
         return f"Asignación #{self.assignment_id} - Solicitud #{self.solicitud.request_id} ({self.estado_asignacion})"
+
+
+class Notificacion(models.Model):
+    conductor = models.ForeignKey(Conductor, on_delete=models.CASCADE, related_name='notificaciones', verbose_name="Conductor")
+    mensaje = models.CharField(max_length=255, verbose_name="Mensaje")
+    leida = models.BooleanField(default=False, verbose_name="Leída")
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha")
+
+    class Meta:
+        verbose_name = "Notificación"
+        verbose_name_plural = "Notificaciones"
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"Notificación para {self.conductor.apellidos} - {self.mensaje[:30]}..."
+
