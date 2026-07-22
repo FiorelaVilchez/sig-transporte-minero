@@ -140,8 +140,8 @@
                     {% endif %}
 
 
-                    <!-- Reportes Gerenciales (Power BI): Gerencia, Administrador -->
-                    {% if user.perfilusuario.rol == 'Gerencia' or user.perfilusuario.rol == 'Administrador de operaciones' %}
+                    <!-- Reportes Gerenciales (Power BI): Gerencia, Administrador, Supervisor -->
+                    {% if user.perfilusuario.rol == 'Gerencia' or user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
                     <li>
                         <a href="{% url 'dashboard:reportes' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
                             <i class="bi bi-graph-up"></i> Reportes Gerenciales

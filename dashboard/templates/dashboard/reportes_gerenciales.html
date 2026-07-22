@@ -1,22 +1,95 @@
 {% extends 'base.html' %}
 
-{% block title %}SIG — Reportes Gerenciales{% endblock %}
+{% block title %}SIG — Reportes Gerenciales (Power BI){% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="card card-premium accent-header">
-        <div class="card-body text-center py-5">
-            <i class="bi bi-graph-up text-accent display-4 d-block mb-3"></i>
-            <h2 class="card-title mb-3">Reportes Gerenciales</h2>
-            <p class="text-muted col-lg-8 mx-auto mb-4">
-                En este módulo podrá exportar los datos operativos del sistema a archivos CSV
-                y consultar el dashboard gerencial propuesto en Power BI, construido a partir
-                de esos archivos exportados.
-            </p>
-            <div class="alert alert-warning col-lg-6 mx-auto d-inline-block" role="alert">
-                <i class="bi bi-hourglass-split me-2"></i>
-                <strong>Disponible próximamente</strong> — La exportación CSV y la integración
-                con Power BI se implementarán en las Fases 9 y 10 del proyecto.
+    <!-- Messages Block -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-premium" role="alert">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h2 class="card-title mb-1">
+                        <i class="bi bi-graph-up text-accent me-2"></i>Reportes Gerenciales e Integración Power BI
+                    </h2>
+                    <p class="text-muted small mb-0">
+                        Exporta datos operativos a archivos CSV optimizados para su consumo directo por Power BI Desktop.
+                    </p>
+                </div>
+                <div class="d-inline-flex gap-2">
+                    {% if puede_regenerar %}
+                        <form action="{% url 'dashboard:generar_csv' %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-accent d-flex align-items-center gap-2">
+                                <i class="bi bi-arrow-repeat"></i> Generar / Actualizar CSVs
+                            </button>
+                        </form>
+                    {% endif %}
+                    <a href="{% url 'dashboard:descargar_zip' %}" class="btn btn-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-zip-fill"></i> Descargar Todo (.zip)
+                    </a>
+                </div>
+            </div>
+            
+            <div class="alert alert-info border-0 rounded p-3 mb-4" style="background-color: rgba(27, 42, 56, 0.05); color: var(--text-dark);">
+                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                <strong>Flujo de trabajo para Power BI Desktop:</strong>
+                Los archivos se exportan codificados en UTF-8-SIG en la carpeta <code>exports/</code> en la raíz del proyecto.
+                Power BI Desktop leerá directamente estos archivos desde esa ubicación una vez generado el origen.
+            </div>
+
+            <!-- Tabla de Archivos CSV -->
+            <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle border-top">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Archivo CSV</th>
+                            <th>Uso / Contenido</th>
+                            <th class="text-center">Filas</th>
+                            <th>Última Generación</th>
+                            <th class="text-end">Descarga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for info in archivos_info %}
+                            <tr>
+                                <td>
+                                    <span class="fw-bold font-monospace text-primary">{{ info.filename }}</span>
+                                </td>
+                                <td>
+                                    <span class="small text-muted">{{ info.description }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if info.exists %}
+                                        <span class="badge bg-success font-monospace">{{ info.rows }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary font-monospace">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="small font-monospace {% if info.exists %}text-dark{% else %}text-muted{% endif %}">
+                                        {{ info.fecha_generacion }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'dashboard:descargar_csv' info.filename %}" class="btn btn-sm btn-outline-custom" title="Descargar archivo individual">
+                                        <i class="bi bi-download"></i> Descargar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

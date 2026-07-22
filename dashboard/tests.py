@@ -1,7 +1,11 @@
 import datetime
-
+import os
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.urls import reverse
+
+
 
 from alerts.models import Alerta
 from assignments.models import Asignacion
@@ -321,8 +325,153 @@ class DashboardVistasTestCase(TestCase):
         self.assertRedirects(response, '/dashboard/')
         self.assertIn('dashboard_ultima_actualizacion', self.client.session)
 
-    def test_reportes_gerenciales_placeholder_accesible(self):
-        self.client.force_login(self.gerencia)
-        response = self.client.get('/dashboard/reportes/')
+    def test_reportes_gerenciales_permissions(self):
+        # Admin can access, can see form to regenerate
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse('dashboard:reportes'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Disponible próximamente')
+        self.assertTrue(response.context['puede_regenerar'])
+        
+        # Supervisor can access, but cannot regenerate
+        self.client.force_login(self.supervisor)
+        response = self.client.get(reverse('dashboard:reportes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['puede_regenerar'])
+
+        # Gerencia can access, can regenerate
+        self.client.force_login(self.gerencia)
+        response = self.client.get(reverse('dashboard:reportes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['puede_regenerar'])
+
+        # Conductor cannot access (403)
+        self.client.force_login(self.conductor_user)
+        response = self.client.get(reverse('dashboard:reportes'))
+        self.assertEqual(response.status_code, 403)
+
+
+class CSVExportTestCase(TestCase):
+    def setUp(self):
+        self.hoy = datetime.date.today()
+        # Create users
+        self.admin = User.objects.create_user(username='admin_ops', password='pass')
+        PerfilUsuario.objects.create(usuario=self.admin, rol='Administrador de operaciones')
+        
+        self.supervisor = User.objects.create_user(username='super', password='pass')
+        PerfilUsuario.objects.create(usuario=self.supervisor, rol='Supervisor')
+
+        self.gerencia = User.objects.create_user(username='gerencia', password='pass')
+        PerfilUsuario.objects.create(usuario=self.gerencia, rol='Gerencia')
+
+        self.conductor_user = User.objects.create_user(username='cond', password='pass')
+        PerfilUsuario.objects.create(usuario=self.conductor_user, rol='Conductor')
+
+        # Create conductor, vehicle, request, assignment, docs
+        self.conductor = Conductor.objects.create(
+            nombres="Juan",
+            apellidos="Pérez",
+            licencia="LIC001",
+            especialidad="Camioneta",
+            estado="Disponible",
+            dni="11111111",
+            fecha_nacimiento=datetime.date(1990, 1, 1),
+            fecha_ingreso=datetime.date(2020, 1, 1),
+        )
+        self.vehiculo = Vehiculo.objects.create(
+            placa="ABC-123",
+            tipo="Camioneta",
+            capacidad=5,
+            estado="Disponible",
+        )
+        self.solicitud = SolicitudServicio.objects.create(
+            cliente="Minera A",
+            fecha_servicio=self.hoy,
+            hora_servicio=datetime.time(8, 0),
+            origen="A",
+            destino="B",
+            tipo_servicio="Traslado de personal",
+            prioridad="Alta",
+            tipo_vehiculo_requerido="Camioneta",
+            estado_solicitud="Pendiente"
+        )
+        self.asignacion = Asignacion.objects.create(
+            solicitud=self.solicitud,
+            conductor=self.conductor,
+            vehiculo=self.vehiculo,
+            estado_asignacion="Aprobada",
+            observacion="Ninguna"
+        )
+        self.doc_conductor = DocumentoConductor.objects.create(
+            conductor=self.conductor,
+            tipo_documento="Licencia de conducir",
+            fecha_emision=self.hoy - datetime.timedelta(days=10),
+            fecha_vencimiento=self.hoy + datetime.timedelta(days=20),
+            estado_documento="Vigente"
+        )
+
+    def test_csv_columns_and_counts(self):
+        from dashboard.exports import exportar_todos_los_csv_a_disco
+        import csv
+        
+        exportar_todos_los_csv_a_disco()
+        exports_dir = os.path.join(settings.BASE_DIR, 'exports')
+        
+        # 1. driver_documents.csv
+        driver_doc_path = os.path.join(exports_dir, 'driver_documents.csv')
+        self.assertTrue(os.path.exists(driver_doc_path))
+        with open(driver_doc_path, 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            header = next(reader)
+            self.assertEqual(header, [
+                "document_id", "driver_id", "conductor_nombre_completo", "dni", 
+                "tipo_documento", "fecha_emision", "fecha_vencimiento", "estado_documento"
+            ])
+            rows = list(reader)
+            self.assertEqual(len(rows), DocumentoConductor.objects.count())
+            
+        # 2. assignments.csv
+        assignments_path = os.path.join(exports_dir, 'assignments.csv')
+        self.assertTrue(os.path.exists(assignments_path))
+        with open(assignments_path, 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            header = next(reader)
+            self.assertEqual(header, [
+                "assignment_id", "request_id", "driver_id", "conductor_nombre", 
+                "truck_id", "placa", "estado_asignacion", "observacion", "fecha_asignacion"
+            ])
+            rows = list(reader)
+            self.assertEqual(len(rows), Asignacion.objects.count())
+            
+        # 3. powerbi_asignaciones_completas.csv
+        powerbi_path = os.path.join(exports_dir, 'powerbi_asignaciones_completas.csv')
+        self.assertTrue(os.path.exists(powerbi_path))
+        with open(powerbi_path, 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            header = next(reader)
+            self.assertEqual(header, [
+                "assignment_id", "request_id", "cliente", "fecha_servicio", "prioridad", 
+                "tipo_servicio", "origen", "destino", "driver_id", "conductor_nombre", 
+                "especialidad", "truck_id", "placa", "tipo_vehiculo", "estado_asignacion", 
+                "observacion", "fecha_asignacion"
+            ])
+            rows = list(reader)
+            self.assertEqual(len(rows), Asignacion.objects.count())
+
+    def test_generate_and_download_views(self):
+        self.client.force_login(self.admin)
+        # Generate post
+        response = self.client.post(reverse('dashboard:generar_csv'))
+        self.assertRedirects(response, reverse('dashboard:reportes'))
+        
+        # Download individual
+        response = self.client.get(reverse('dashboard:descargar_csv', args=['driver_documents.csv']))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertIn('attachment; filename="driver_documents.csv"', response['Content-Disposition'])
+        
+        # Download zip
+        response = self.client.get(reverse('dashboard:descargar_zip'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+        self.assertIn('attachment; filename="reportes_powerbi.zip"', response['Content-Disposition'])
+
