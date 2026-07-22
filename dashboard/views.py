@@ -15,8 +15,10 @@ from alerts.services import escanear_documentos_y_generar_alertas
 from core.decorators import role_required
 from documents.services import recalcular_estados_documentales
 
-from .services import get_dashboard_kpis
 from .exports import exportar_todos_los_csv_a_disco
+from .forms import ReporteGerencialForm
+from .models import CapturaReporte, ReporteGerencial
+from .services import get_dashboard_kpis
 
 def _formatear_ultima_actualizacion(valor_iso):
     if not valor_iso:
@@ -104,6 +106,18 @@ def _obtener_metadatos_archivo(filename, description):
         'fecha_generacion': 'No generado'
     }
 
+def _obtener_reportes_gerenciales_context(user):
+    reportes = ReporteGerencial.objects.select_related('subido_por').prefetch_related('capturas')
+    reporte_reciente = reportes.first()
+    historial = reportes[1:20] if reportes.count() > 1 else reportes.none()
+    puede_subir = user.perfilusuario.rol in ('Administrador de operaciones', 'Gerencia')
+    return {
+        'reporte_reciente': reporte_reciente,
+        'historial_reportes': historial,
+        'puede_subir': puede_subir,
+    }
+
+
 @role_required('Administrador de operaciones', 'Supervisor', 'Gerencia')
 def reportes_gerenciales(request):
     filenames = [
@@ -116,15 +130,46 @@ def reportes_gerenciales(request):
         ('powerbi_drivers_con_documentos.csv', 'Archivo consolidado para análisis documental de conductores'),
         ('powerbi_trucks_con_documentos.csv', 'Archivo consolidado para análisis documental de vehículos'),
     ]
-    
+
     archivos_info = [_obtener_metadatos_archivo(fn, desc) for fn, desc in filenames]
     puede_regenerar = request.user.perfilusuario.rol in ('Administrador de operaciones', 'Gerencia')
-    
+
     context = {
         'archivos_info': archivos_info,
         'puede_regenerar': puede_regenerar,
+        **_obtener_reportes_gerenciales_context(request.user),
     }
     return render(request, 'dashboard/reportes_gerenciales.html', context)
+
+
+@role_required('Administrador de operaciones', 'Gerencia')
+def reportes_subir(request):
+    if request.method != 'POST':
+        return redirect('dashboard:reportes')
+
+    form = ReporteGerencialForm(request.POST, request.FILES)
+    if form.is_valid():
+        reporte = form.save(commit=False)
+        reporte.subido_por = request.user
+        reporte.save()
+
+        for orden, imagen in enumerate(request.FILES.getlist('capturas')):
+            CapturaReporte.objects.create(
+                reporte=reporte,
+                imagen=imagen,
+                orden=orden,
+            )
+
+        messages.success(request, 'Reporte gerencial subido correctamente.')
+    else:
+        for error in form.non_field_errors():
+            messages.error(request, error)
+        for field, errors in form.errors.items():
+            if field != '__all__':
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+
+    return redirect('dashboard:reportes')
 
 @role_required('Administrador de operaciones', 'Gerencia')
 def reportes_generar_csv(request):
