@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Dashboard Operativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show card-premium" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card card-premium accent-header mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h2 class="card-title mb-1">
+                        <i class="bi bi-speedometer2 text-accent me-2"></i>Dashboard Operativo
+                    </h2>
+                    <p class="text-muted small mb-0">
+                        Indicadores KPI de asignaciones, documentación y riesgo operativo en tiempo real.
+                    </p>
+                    {% if ultima_actualizacion %}
+                        <p class="text-secondary small mb-0 mt-2">
+                            <i class="bi bi-clock-history me-1"></i>
+                            Última actualización: {{ ultima_actualizacion }}
+                        </p>
+                    {% else %}
+                        <p class="text-secondary small mb-0 mt-2">
+                            <i class="bi bi-clock-history me-1"></i>
+                            Última actualización: sin recálculo manual registrado
+                        </p>
+                    {% endif %}
+                </div>
+                {% if puede_actualizar %}
+                <div>
+                    <form action="{% url 'dashboard:actualizar' %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-accent d-flex align-items-center gap-2">
+                            <i class="bi bi-arrow-repeat"></i> Actualizar indicadores
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sección 1: Indicadores de asignación -->
+            <h5 class="fw-bold text-secondary mb-3">
+                <i class="bi bi-diagram-3 me-2"></i>Indicadores de asignación
+            </h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Total de asignaciones</div>
+                            <div class="display-5 fw-bold text-primary">{{ kpis.total_asignaciones }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Asignaciones aprobadas</div>
+                            <div class="display-5 fw-bold text-success">{{ kpis.asignaciones_aprobadas }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Asignaciones rechazadas</div>
+                            <div class="display-5 fw-bold text-danger">{{ kpis.asignaciones_rechazadas }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Indicadores documentales y de riesgo -->
+            <h5 class="fw-bold text-secondary mb-3">
+                <i class="bi bi-file-earmark-medical me-2"></i>Indicadores documentales y de riesgo
+            </h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Documentos vencidos</div>
+                            <div class="display-5 fw-bold text-danger">{{ kpis.documentos_vencidos }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Documentos por vencer</div>
+                            <div class="display-5 fw-bold text-warning">{{ kpis.documentos_por_vencer }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Alertas de riesgo alto</div>
+                            <div class="display-5 fw-bold text-danger">{{ kpis.alertas_riesgo_alto }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Distribución de carga operativa -->
+            <h5 class="fw-bold text-secondary mb-3">
+                <i class="bi bi-bar-chart-line me-2"></i>Distribución de carga operativa
+            </h5>
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Solicitudes por estado</h6>
+                            <div style="max-height: 320px;">
+                                <canvas id="chartSolicitudes"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Top conductores por asignaciones</h6>
+                            <div style="max-height: 220px;">
+                                <canvas id="chartConductores"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Top vehículos por asignaciones</h6>
+                            <div style="max-height: 220px;">
+                                <canvas id="chartVehiculos"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    const solicitudesLabels = {{ solicitudes_labels|safe }};
+    const solicitudesValues = {{ solicitudes_values|safe }};
+    const conductoresLabels = {{ conductores_labels|safe }};
+    const conductoresValues = {{ conductores_values|safe }};
+    const vehiculosLabels = {{ vehiculos_labels|safe }};
+    const vehiculosValues = {{ vehiculos_values|safe }};
+
+    new Chart(document.getElementById('chartSolicitudes'), {
+        type: 'doughnut',
+        data: {
+            labels: solicitudesLabels,
+            datasets: [{
+                data: solicitudesValues,
+                backgroundColor: [
+                    '#ffc107', '#0d6efd', '#6f42c1', '#198754', '#dc3545'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartConductores'), {
+        type: 'bar',
+        data: {
+            labels: conductoresLabels,
+            datasets: [{
+                label: 'Asignaciones',
+                data: conductoresValues,
+                backgroundColor: '#0d6efd',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+
+    new Chart(document.getElementById('chartVehiculos'), {
+        type: 'bar',
+        data: {
+            labels: vehiculosLabels,
+            datasets: [{
+                label: 'Asignaciones',
+                data: vehiculosValues,
+                backgroundColor: '#198754',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+</script>
+{% endblock %}

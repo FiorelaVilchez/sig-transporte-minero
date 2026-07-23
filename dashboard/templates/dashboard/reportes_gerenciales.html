@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Reportes Gerenciales{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card card-premium accent-header">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-graph-up text-accent display-4 d-block mb-3"></i>
+            <h2 class="card-title mb-3">Reportes Gerenciales</h2>
+            <p class="text-muted col-lg-8 mx-auto mb-4">
+                En este módulo podrá exportar los datos operativos del sistema a archivos CSV
+                y consultar el dashboard gerencial propuesto en Power BI, construido a partir
+                de esos archivos exportados.
+            </p>
+            <div class="alert alert-warning col-lg-6 mx-auto d-inline-block" role="alert">
+                <i class="bi bi-hourglass-split me-2"></i>
+                <strong>Disponible próximamente</strong> — La exportación CSV y la integración
+                con Power BI se implementarán en las Fases 9 y 10 del proyecto.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -87,7 +87,7 @@
                     <!-- Dashboard operativo: Administrador, Supervisor, Gerencia -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'dashboard:operativo' %}" class="sidebar-link {% if request.resolver_match.app_name == 'dashboard' and request.resolver_match.url_name == 'operativo' %}active{% endif %}">
                             <i class="bi bi-speedometer2"></i> Dashboard Operativo
                         </a>
                     </li>
@@ -143,8 +143,7 @@
                     <!-- Reportes Gerenciales (Power BI): Gerencia, Administrador -->
                     {% if user.perfilusuario.rol == 'Gerencia' or user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
-                        <!-- TODO fase 6 -->
-                        <a href="#" class="sidebar-link">
+                        <a href="{% url 'dashboard:reportes' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
                             <i class="bi bi-graph-up"></i> Reportes Gerenciales
                         </a>
                     </li>

@@ -45,3 +45,7 @@ def recalcular_estados_todos_documentos():
         "actualizados": actualizados,
         "total": sum(contadores.values()),
     }
+
+
+# Alias usado por el dashboard operativo (Fase 8) y la fase documental (Fase 4).
+recalcular_estados_documentales = recalcular_estados_todos_documentos
