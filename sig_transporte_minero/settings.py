@@ -86,13 +86,31 @@ WSGI_APPLICATION = 'sig_transporte_minero.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# Motor seleccionable por variables de entorno (RNF-04):
+#   - Si DB_ENGINE=postgresql en .env → usa PostgreSQL (vía psycopg2-binary)
+#   - Si DB_ENGINE no está definida    → usa SQLite por defecto (desarrollo local rápido)
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_DB_ENGINE = config('DB_ENGINE', default='sqlite')
+
+if _DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='sig_transporte_minero'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -147,5 +165,5 @@ LOGOUT_REDIRECT_URL = 'core:login'
 # Media files (uploaded documents)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 

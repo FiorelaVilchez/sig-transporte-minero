@@ -302,17 +302,101 @@ Una vez exportado el PDF o las capturas:
 
 ---
 
-## Nota: Integración futura con PostgreSQL (Fase 11)
+## Conexión directa a PostgreSQL desde Power BI (Fase 11 — Vía recomendada para la versión final)
 
-En la versión actual del prototipo, Power BI lee los datos desde los 8 archivos CSV estáticos de la carpeta `exports/`. Esto es suficiente para la etapa de demostración académica.
+> **Esta es la vía preferida** para la sustentación final del proyecto, una vez que la base de datos ha sido migrada a PostgreSQL siguiendo la guía `docs/setup_postgresql.md`. Elimina la dependencia de los archivos CSV y garantiza que Power BI siempre muestra datos actualizados en tiempo real.
 
-En una versión posterior del proyecto **(Fase 11)**, al migrar la base de datos de SQLite a **PostgreSQL**, Power BI podrá conectarse directamente sin necesidad de CSV intermedios:
+### ¿Cuándo usar esta vía y cuándo usar CSV?
 
-1. En Power BI Desktop: **Obtener datos → Base de datos → Base de datos de PostgreSQL**.
-2. Servidor: dirección del servidor (ej. `localhost:5432`).
-3. Base de datos: nombre de la base de datos del proyecto.
-4. Power BI realizará consultas SQL directas, con datos siempre actualizados sin pasos manuales adicionales.
+| Situación | Vía recomendada |
+|-----------|-----------------|
+| Sustentación final con PostgreSQL activo | **Conexión directa a PostgreSQL** (esta sección) |
+| Trabajo en PC sin PostgreSQL instalado | **Archivos CSV** (Pasos 1–9 anteriores) |
+| Revisión de datos históricos archivados | Cualquiera de las dos |
+| Presentación sin internet / servidor | Archivos CSV (más portátil) |
 
 ---
 
-*Manual generado como parte del SIG — Gestión y Asignación de Recursos en Transporte Minero (Fase 10).*
+### Paso 1 — Instalar el conector PostgreSQL para Power BI
+
+Power BI Desktop necesita el driver de PostgreSQL de Npgsql. En la mayoría de instalaciones modernas ya viene incluido, pero si ves un error al conectar:
+
+1. Descarga el instalador desde: <https://github.com/npgsql/npgsql/releases> (versión más reciente de Npgsql).
+2. Instala y reinicia Power BI Desktop.
+
+---
+
+### Paso 2 — Conectar Power BI Desktop a PostgreSQL
+
+1. Abre **Power BI Desktop**.
+2. Haz clic en **Obtener datos** (barra superior o pantalla de inicio).
+3. En el buscador escribe `PostgreSQL` → selecciona **Base de datos de PostgreSQL** → **Conectar**.
+4. Rellena los campos:
+   - **Servidor:** `localhost:5432` (o la IP del servidor si no es local)
+   - **Base de datos:** `sig_transporte_minero`
+5. Clic en **Aceptar**.
+6. En la ventana de autenticación:
+   - Selecciona **Base de datos** (no Windows).
+   - **Nombre de usuario:** `postgres` (o el usuario definido en tu `.env`).
+   - **Contraseña:** la que configuraste en PostgreSQL.
+7. Clic en **Conectar**.
+
+---
+
+### Paso 3 — Seleccionar las tablas del sistema
+
+Una vez conectado, Power BI muestra el Navegador con todas las tablas de `sig_transporte_minero`. Las tablas que genera Django para este proyecto son:
+
+| Tabla en PostgreSQL | Modelo Django | Contenido |
+|---|---|---|
+| `drivers_conductor` | `Conductor` | Registro de conductores |
+| `trucks_vehiculo` | `Vehiculo` | Flota de vehículos |
+| `documents_documentoconductor` | `DocumentoConductor` | Docs de conductores (licencias, etc.) |
+| `documents_documentovehiculo` | `DocumentoVehiculo` | Docs de vehículos (SOAT, revisión técnica) |
+| `service_requests_solicitudservicio` | `SolicitudServicio` | Solicitudes de transporte |
+| `assignments_asignacion` | `Asignacion` | Asignaciones conductor-vehículo |
+| `assignments_notificacion` | `Notificacion` | Notificaciones al conductor |
+| `alerts_alerta` | `Alerta` | Alertas documentales |
+| `dashboard_reportegerencial` | `ReporteGerencial` | Reportes guardados |
+| `auth_user` | `User` (Django) | Usuarios del sistema |
+| `core_perfilusuario` | `PerfilUsuario` | Roles de usuarios |
+
+**Selecciona las tablas que necesites** (para los dashboards de la Fase 10, las más importantes son las mismas que los CSV: `drivers_conductor`, `trucks_vehiculo`, `documents_*`, `service_requests_*`, `assignments_asignacion`, `alerts_alerta`) y haz clic en **Cargar**.
+
+---
+
+### Paso 4 — Actualizar los informes existentes (si ya tienes el .pbix con CSV)
+
+Si ya tienes un archivo `.pbix` creado con los CSV de la Fase 10, puedes migrar las fuentes de datos sin rehacer los informes:
+
+1. Abre el `.pbix` existente.
+2. Ve a **Inicio → Transformar datos → Configuración de origen de datos**.
+3. Selecciona cada fuente CSV → **Cambiar origen** → elige la tabla PostgreSQL equivalente.
+4. Ajusta los nombres de columna si difieren (las columnas en las tablas Django tienen los mismos nombres que los campos del modelo, en minúsculas y con `_`).
+
+---
+
+### Paso 5 — Configurar actualización automática
+
+Con la conexión directa a PostgreSQL, puedes configurar que el informe se actualice automáticamente:
+
+1. En Power BI Desktop: **Inicio → Actualizar**.
+2. Para actualizaciones programadas (Power BI Service): publica el informe y configura la puerta de enlace de datos.
+
+> **Para el prototipo académico,** la actualización manual presionando **Actualizar** en Power BI Desktop es suficiente para la sustentación.
+
+---
+
+### Resumen comparativo: CSV vs PostgreSQL directo
+
+| Característica | Archivos CSV | Conexión PostgreSQL |
+|---|---|---|
+| Configuración inicial | Ninguna (solo `exportar_csv_powerbi`) | Instalar PostgreSQL + driver Npgsql |
+| Datos actualizados | Manual (re-exportar CSV) | Automático al actualizar el informe |
+| Portabilidad | Alta (archivos en cualquier PC) | Requiere acceso al servidor PostgreSQL |
+| Recomendado para | Borrador, pruebas, sin servidor | Sustentación final, demo en vivo |
+| Relaciones entre tablas | Se configuran manualmente en Power BI | Se importan automáticamente (claves foráneas) |
+
+---
+
+*Manual actualizado en la Fase 11 del proyecto SIG Transporte Minero — Universidad Nacional del Altiplano, 2026.*
