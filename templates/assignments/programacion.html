@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Programación Semanal — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row mb-3">
+        <div class="col d-flex flex-wrap align-items-center gap-3">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">Programación Semanal</h1>
+                <p class="text-muted mb-0">Semana del {{ lunes|date:"d/m/Y" }}. Los recursos se reservan por horario: un conductor puede tener varios servicios si no se cruzan y descansa 8 horas entre ellos.</p>
+            </div>
+            <div class="ms-auto btn-group">
+                <a class="btn btn-outline-secondary btn-sm" href="?semana={{ anterior }}"><i class="bi bi-chevron-left"></i> Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" href="?">Esta semana</a>
+                <a class="btn btn-outline-secondary btn-sm" href="?semana={{ siguiente }}">Siguiente <i class="bi bi-chevron-right"></i></a>
+            </div>
+        </div>
+        <div class="col-12"><hr class="mt-3"></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        {% for dia, servicios in dias %}
+        <div class="col-md-6 col-xl">
+            <div class="card border-0 shadow-sm h-100 {% if dia == today %}border-top border-3 border-warning{% endif %}">
+                <div class="card-header bg-white py-2">
+                    <strong class="text-capitalize">{{ dia|date:"l" }}</strong> <span class="text-muted small">{{ dia|date:"d/m" }}</span>
+                </div>
+                <div class="card-body p-2">
+                    {% for a in servicios %}
+                    <a href="{% url 'service_requests:solicitud_detail' a.solicitud.pk %}" class="d-block text-decoration-none text-dark border rounded p-2 mb-2 small">
+                        <div class="fw-bold">{{ a.solicitud.hora_servicio|time:"H:i" }} · {{ a.solicitud.duracion_horas }} h</div>
+                        <div>{{ a.solicitud.cliente }}</div>
+                        <div class="text-muted">{{ a.conductor.apellidos }} · <span class="font-monospace">{{ a.vehiculo.placa }}</span></div>
+                        <span class="badge {% if a.estado_operativo == 'Completado' %}bg-success{% elif a.estado_operativo == 'En ruta' %}bg-warning text-dark{% elif a.estado_operativo == 'Con incidencia' %}bg-danger{% else %}bg-primary{% endif %}">{{ a.estado_operativo }}</span>
+                    </a>
+                    {% empty %}
+                    <p class="text-muted small mb-0 text-center py-2">Sin servicios</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3"><h5 class="mb-0 fw-bold"><i class="bi bi-hourglass-split me-2"></i>Carga de horas por conductor</h5></div>
+                <div class="card-body">
+                    {% for item in carga %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small"><span>{{ item.conductor.apellidos }}, {{ item.conductor.nombres }}</span><span class="font-monospace">{{ item.horas }} / {{ limite }} h</span></div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {% if item.porcentaje >= 90 %}bg-danger{% elif item.porcentaje >= 70 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ item.porcentaje }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3"><h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-circle me-2"></i>Solicitudes de la semana sin asignar</h5></div>
+                <div class="card-body">
+                    {% for s in sin_asignar %}
+                    <div class="d-flex justify-content-between border-bottom py-2 small">
+                        <span><strong>#{{ s.request_id }}</strong> {{ s.cliente }} · {{ s.tipo_vehiculo_requerido }}</span>
+                        <span class="text-muted">{{ s.fecha_servicio|date:"d/m" }} {{ s.hora_servicio|time:"H:i" }} · {{ s.estado_solicitud }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">Todas las solicitudes de la semana están asignadas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

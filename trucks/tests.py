@@ -22,7 +22,7 @@ class VehiculoViewsTestCase(TestCase):
         # Create test vehicle
         self.vehiculo = Vehiculo.objects.create(
             placa="ABC-123",
-            tipo="Camioneta",
+            tipo_id="Camioneta",
             capacidad=5,
             estado="Disponible",
             revision_tecnica_vigente=True,
@@ -96,7 +96,7 @@ class VehiculoViewsTestCase(TestCase):
         # Re-create vehicle and assign
         v2 = Vehiculo.objects.create(
             placa="FFF-444",
-            tipo="Bus",
+            tipo_id="Bus",
             capacidad=40,
             estado="Disponible",
             revision_tecnica_vigente=True,
@@ -110,7 +110,7 @@ class VehiculoViewsTestCase(TestCase):
             destino="Arequipa",
             tipo_servicio="Traslado de personal",
             prioridad="Alta",
-            tipo_vehiculo_requerido="Bus",
+            tipo_vehiculo_requerido_id="Bus",
             estado_solicitud="Pendiente"
         )
         Asignacion.objects.create(

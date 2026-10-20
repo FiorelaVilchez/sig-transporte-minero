@@ -3,12 +3,13 @@ from django.db.models import Q, ProtectedError
 from django.contrib import messages
 from django.core.paginator import Paginator
 from core.decorators import role_required
+from documents.services import cumplimiento_documental
 from .models import Conductor
 from .forms import ConductorForm
 
 @role_required('Administrador de operaciones', 'Supervisor')
 def conductor_list(request):
-    conductores_list = Conductor.objects.all()
+    conductores_list = Conductor.objects.prefetch_related('tipos_habilitados')
     
     # Buscador
     query = request.GET.get('q', '')
@@ -51,6 +52,7 @@ def conductor_detail(request, pk):
     return render(request, 'drivers/conductor_detail.html', {
         'conductor': conductor,
         'documentos': documentos,
+        'cumplimiento': cumplimiento_documental(conductor, True),
         'is_admin': is_admin,
     })
 

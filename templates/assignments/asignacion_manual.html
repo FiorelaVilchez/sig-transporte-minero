@@ -17,7 +17,7 @@
     {% if error_validacion %}
     <div class="alert alert-danger" role="alert">
         <h5 class="alert-heading fw-bold"><i class="bi bi-x-octagon-fill me-2"></i>Asignación Rechazada por Reglas de Negocio</h5>
-        <p class="mb-2">La combinación seleccionada no puede registrarse debido a los siguientes bloqueos documentales:</p>
+        <p class="mb-2">La combinación seleccionada no puede registrarse debido a los siguientes bloqueos:</p>
         <ul class="mb-0 font-monospace" style="font-size: 0.9rem;">
             {% for bloqueo in resultado.bloqueos %}
                 <li><strong>{{ bloqueo }}</strong></li>

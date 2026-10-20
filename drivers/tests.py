@@ -70,7 +70,9 @@ class ConductorViewsTestCase(TestCase):
             'apellidos': 'Soto',
             'dni': '87654321',
             'licencia': 'Q87654321',
-            'especialidad': 'Bus',
+            'categoria_licencia': 'A-IIIa',
+            'fecha_obtencion_licencia': '2012-03-01',
+            'tipos_habilitados': ['Bus'],
             'estado': 'Disponible',
             'fecha_nacimiento': '1985-05-12',
             'fecha_ingreso': '2021-02-15',
@@ -78,6 +80,8 @@ class ConductorViewsTestCase(TestCase):
         response = self.client.post(reverse('drivers:conductor_create'), post_data)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Conductor.objects.filter(dni='87654321').exists())
+        nuevo = Conductor.objects.get(dni='87654321')
+        self.assertEqual(list(nuevo.tipos_habilitados.values_list('nombre', flat=True)), ['Bus'])
 
     def test_dar_baja(self):
         self.client.force_login(self.admin_user)
@@ -112,7 +116,7 @@ class ConductorViewsTestCase(TestCase):
             destino="Arequipa",
             tipo_servicio="Traslado de personal",
             prioridad="Alta",
-            tipo_vehiculo_requerido="Bus",
+            tipo_vehiculo_requerido_id="Bus",
             estado_solicitud="Pendiente"
         )
         Asignacion.objects.create(

@@ -7,6 +7,9 @@ class Alerta(models.Model):
         ('Documento por vencer', 'Documento por vencer'),
         ('Vehículo en mantenimiento', 'Vehículo en mantenimiento'),
         ('Conductor no apto', 'Conductor no apto'),
+        ('Checklist no aprobado', 'Checklist no aprobado'),
+        ('Incidencia operativa', 'Incidencia operativa'),
+        ('Cobro pendiente', 'Cobro pendiente'),
     ]
 
     NIVEL_RIESGO_CHOICES = [

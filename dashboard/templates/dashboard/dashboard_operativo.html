@@ -110,6 +110,67 @@
                 </div>
             </div>
 
+            <!-- Sección 2b: Ejecución, cumplimiento y cobranza -->
+            <h5 class="fw-bold text-secondary mb-3">
+                <i class="bi bi-activity me-2"></i>Ejecución, cumplimiento y cobranza
+            </h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Cumplimiento del servicio (mes)</div>
+                            <div class="display-6 fw-bold text-success">{% if kpis2.cumplimiento_servicio is not None %}{{ kpis2.cumplimiento_servicio }}%{% else %}—{% endif %}</div>
+                            <div class="small text-muted">{{ kpis2.servicios_completados_mes }} servicios completados</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Incidencias del mes</div>
+                            <div class="display-6 fw-bold text-danger">{{ kpis2.incidencias_mes }}</div>
+                            <div class="small text-muted">{{ kpis2.incidencias_graves_abiertas }} graves sin resolver · {{ kpis2.en_ruta }} en ruta ahora</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Checklists aprobados (mes)</div>
+                            <div class="display-6 fw-bold text-primary">{% if kpis2.checklists_aprobados_pct is not None %}{{ kpis2.checklists_aprobados_pct }}%{% else %}—{% endif %}</div>
+                            <div class="small text-muted">{{ kpis2.checklists_mes }} registrados</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Por cobrar</div>
+                            <div class="display-6 fw-bold text-warning">S/ {{ kpis2.por_cobrar|floatformat:0 }}</div>
+                            <div class="small text-muted">Cobrado en el mes: S/ {{ kpis2.cobrado_mes|floatformat:0 }} · {{ kpis2.cobros_atrasados }} con más de 15 días</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Conductores cerca del límite</div>
+                            <div class="display-6 fw-bold text-warning">{{ kpis2.conductores_cerca_limite }}</div>
+                            <div class="small text-muted">80 % o más de las 60 h semanales</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Documentos sin visto bueno de mina</div>
+                            <div class="display-6 fw-bold text-danger">{{ kpis2.documentos_pendientes_mina }}</div>
+                            <div class="small text-muted">Bloquean la asignación (R8)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sección 3: Distribución de carga operativa -->
             <h5 class="fw-bold text-secondary mb-3">
                 <i class="bi bi-bar-chart-line me-2"></i>Distribución de carga operativa

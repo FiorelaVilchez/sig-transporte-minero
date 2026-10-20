@@ -26,7 +26,7 @@ class SolicitudServicioViewsTestCase(TestCase):
             destino="Punto B",
             tipo_servicio="Traslado de personal",
             prioridad="Alta",
-            tipo_vehiculo_requerido="Bus",
+            tipo_vehiculo_requerido_id="Bus",
             estado_solicitud="Pendiente"
         )
         self.req2 = SolicitudServicio.objects.create(
@@ -37,7 +37,7 @@ class SolicitudServicioViewsTestCase(TestCase):
             destino="Punto D",
             tipo_servicio="Traslado de carga",
             prioridad="Media",
-            tipo_vehiculo_requerido="Camión",
+            tipo_vehiculo_requerido_id="Camión",
             estado_solicitud="Pendiente"
         )
 
@@ -88,6 +88,9 @@ class SolicitudServicioViewsTestCase(TestCase):
             'tipo_servicio': 'Traslado mixto',
             'prioridad': 'Baja',
             'tipo_vehiculo_requerido': 'Camioneta',
+            'pasajeros': 3,
+            'duracion_horas': 6,
+            'km_estimados': 120,
             'estado_solicitud': 'Pendiente',
         }
         response = self.client.post(reverse('service_requests:solicitud_create'), post_data)

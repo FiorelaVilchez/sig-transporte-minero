@@ -4,7 +4,7 @@ from core.models import PerfilUsuario
 from drivers.models import Conductor
 
 class Command(BaseCommand):
-    help = 'Seeds the database with test users for each of the 4 roles.'
+    help = 'Seeds the database with test users for each of the 5 roles.'
 
     def handle(self, *args, **options):
         # Datos de usuarios y perfiles
@@ -46,8 +46,18 @@ class Command(BaseCommand):
                 'email': 'juan.cond@transmin.com',
                 'password': 'Conductor2026*',
                 'rol': 'Conductor',
-                'conductor_license': 'Q12345678', # Juan Pérez Quispe
+                'conductor_license': 'Q41258763',  # Juan Alberto Pérez Quispe
                 'telefono': '954444444'
+            },
+            {
+                'username': 'finanzas1',
+                'first_name': 'Rocío',
+                'last_name': 'Finanzas',
+                'email': 'rocio.fin@transmin.com',
+                'password': 'Finanzas2026*',
+                'rol': 'Finanzas',
+                'conductor_license': None,
+                'telefono': '955555555'
             }
         ]
 

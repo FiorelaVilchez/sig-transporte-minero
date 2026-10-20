@@ -105,6 +105,42 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Número de Pasajeros -->
+                            <div class="col-md-4">
+                                <label for="{{ form.pasajeros.id_for_label }}" class="form-label fw-semibold font-monospace small">Número de Pasajeros</label>
+                                {% render_field form.pasajeros class="form-control" %}
+                                <div class="form-text">Se compara con los asientos de la unidad (regla R7).</div>
+                                {% if form.pasajeros.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.pasajeros.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Duración Estimada (h) -->
+                            <div class="col-md-4">
+                                <label for="{{ form.duracion_horas.id_for_label }}" class="form-label fw-semibold font-monospace small">Duración Estimada (h)</label>
+                                {% render_field form.duracion_horas class="form-control" %}
+                                <div class="form-text">Ocupa al conductor y la unidad en ese horario (R9 y R10).</div>
+                                {% if form.duracion_horas.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.duracion_horas.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Kilómetros Estimados -->
+                            <div class="col-md-4">
+                                <label for="{{ form.km_estimados.id_for_label }}" class="form-label fw-semibold font-monospace small">Kilómetros Estimados</label>
+                                {% render_field form.km_estimados class="form-control" %}
+                                <div class="form-text">Referencia para la valorización.</div>
+                                {% if form.km_estimados.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.km_estimados.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
                             <!-- Prioridad -->
                             <div class="col-md-6">
                                 <label for="{{ form.prioridad.id_for_label }}" class="form-label fw-semibold font-monospace small">Nivel de Prioridad</label>
@@ -126,6 +162,19 @@
                                     </div>
                                 {% endif %}
                             </div>
+                            {% if form.instance.pk %}
+                            <!-- Motivo del Cambio -->
+                            <div class="col-12">
+                                <label for="{{ form.motivo_cambio.id_for_label }}" class="form-label fw-semibold font-monospace small">Motivo del Cambio</label>
+                                {% render_field form.motivo_cambio class="form-control" %}
+                                <div class="form-text">Obligatorio si cambia la fecha, hora, duración, pasajeros o tipo de vehículo. Si la solicitud ya está asignada, el sistema vuelve a validar la asignación y avisa al conductor.</div>
+                                {% if form.motivo_cambio.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.motivo_cambio.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <hr class="my-4">

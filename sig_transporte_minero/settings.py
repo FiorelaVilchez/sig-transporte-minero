@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'assignments',
     'alerts',
     'dashboard',
+    'billing',
 ]
 
 MIDDLEWARE = [

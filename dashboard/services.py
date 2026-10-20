@@ -104,3 +104,66 @@ def get_dashboard_kpis():
         "asignaciones_por_conductor": kpi_asignaciones_por_conductor(),
         "asignaciones_por_vehiculo": kpi_asignaciones_por_vehiculo(),
     }
+
+
+def get_kpis_ejecucion():
+    """
+    Indicadores de ejecución, cumplimiento y cobranza (M7): se calculan con los
+    datos que generan el checklist, las incidencias y las valorizaciones.
+    """
+    import datetime
+    from decimal import Decimal
+
+    from django.db.models import Q, Sum
+
+    from assignments.models import Asignacion, ChecklistPreoperacional, Incidencia
+    from assignments.validators import LIMITE_HORAS_SEMANA, horas_programadas_semana
+    from billing.models import Valorizacion
+    from documents.models import DocumentoConductor, DocumentoVehiculo
+    from drivers.models import Conductor
+
+    hoy = datetime.date.today()
+    inicio_mes = hoy.replace(day=1)
+
+    del_mes = Asignacion.objects.filter(solicitud__fecha_servicio__range=(inicio_mes, hoy))
+    completados = del_mes.filter(estado_operativo='Completado').count()
+    con_incidencia = del_mes.filter(estado_operativo='Con incidencia').count()
+    cerrados = completados + con_incidencia
+    cumplimiento = round(completados * 100 / cerrados) if cerrados else None
+
+    checklists = ChecklistPreoperacional.objects.filter(fecha__date__gte=inicio_mes)
+    total_check = checklists.count()
+    check_ok = checklists.filter(aprobado=True).count()
+
+    por_cobrar = Valorizacion.objects.filter(
+        estado__in=['Enviada', 'Observada', 'Conforme', 'Facturada']
+    ).aggregate(t=Sum('total'))['t'] or Decimal('0')
+    cobrado_mes = Valorizacion.objects.filter(
+        estado='Pagada', fecha_pago__gte=inicio_mes
+    ).aggregate(t=Sum('total'))['t'] or Decimal('0')
+    atrasadas = sum(1 for v in Valorizacion.objects.filter(estado__in=['Enviada', 'Observada']) if v.cobro_atrasado)
+
+    cerca_limite = 0
+    for c in Conductor.objects.exclude(estado__in=['De baja', 'No apto']):
+        if horas_programadas_semana(c, hoy) >= LIMITE_HORAS_SEMANA * 0.8:
+            cerca_limite += 1
+
+    pendientes_mina = (
+        DocumentoConductor.objects.filter(estado_mina__in=['Pendiente', 'Observado']).count()
+        + DocumentoVehiculo.objects.filter(estado_mina__in=['Pendiente', 'Observado']).count()
+    )
+
+    return {
+        'servicios_completados_mes': completados,
+        'cumplimiento_servicio': cumplimiento,
+        'incidencias_mes': Incidencia.objects.filter(fecha__date__gte=inicio_mes).count(),
+        'incidencias_graves_abiertas': Incidencia.objects.filter(gravedad='Alta', resuelta=False).count(),
+        'checklists_mes': total_check,
+        'checklists_aprobados_pct': round(check_ok * 100 / total_check) if total_check else None,
+        'por_cobrar': por_cobrar,
+        'cobrado_mes': cobrado_mes,
+        'cobros_atrasados': atrasadas,
+        'conductores_cerca_limite': cerca_limite,
+        'documentos_pendientes_mina': pendientes_mina,
+        'en_ruta': Asignacion.objects.filter(estado_operativo='En ruta').count(),
+    }

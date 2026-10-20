@@ -39,8 +39,10 @@ def dashboard_operativo(request):
         'Gerencia',
     )
 
+    from dashboard.services import get_kpis_ejecucion
     context = {
         'kpis': kpis,
+        'kpis2': get_kpis_ejecucion(),
         'ultima_actualizacion': ultima_actualizacion,
         'puede_actualizar': puede_actualizar,
         'solicitudes_labels': json.dumps(list(kpis['solicitudes_por_estado'].keys())),
@@ -129,6 +131,8 @@ def reportes_gerenciales(request):
         ('powerbi_asignaciones_completas.csv', 'Archivo consolidado para dashboard de asignaciones'),
         ('powerbi_drivers_con_documentos.csv', 'Archivo consolidado para análisis documental de conductores'),
         ('powerbi_trucks_con_documentos.csv', 'Archivo consolidado para análisis documental de vehículos'),
+        ('powerbi_ejecucion_servicios.csv', 'Ejecución de servicios: checklist, kilometraje, incidencias y gastos'),
+        ('powerbi_valorizaciones.csv', 'Valorizaciones y ciclo de cobro por cliente'),
     ]
 
     archivos_info = [_obtener_metadatos_archivo(fn, desc) for fn, desc in filenames]
@@ -190,6 +194,8 @@ def reportes_descargar_csv(request, filename):
         'powerbi_asignaciones_completas.csv',
         'powerbi_drivers_con_documentos.csv',
         'powerbi_trucks_con_documentos.csv',
+        'powerbi_ejecucion_servicios.csv',
+        'powerbi_valorizaciones.csv',
     ]
     if filename not in valid_filenames:
         raise Http404("Archivo no encontrado")

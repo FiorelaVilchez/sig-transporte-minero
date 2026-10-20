@@ -8,6 +8,7 @@ class PerfilUsuario(models.Model):
         ('Supervisor', 'Supervisor'),
         ('Gerencia', 'Gerencia'),
         ('Conductor', 'Conductor'),
+        ('Finanzas', 'Finanzas'),
     ]
 
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfilusuario', verbose_name="Usuario")

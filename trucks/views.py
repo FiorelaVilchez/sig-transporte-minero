@@ -3,6 +3,7 @@ from django.db.models import Q, ProtectedError
 from django.contrib import messages
 from django.core.paginator import Paginator
 from core.decorators import role_required
+from documents.services import cumplimiento_documental
 from .models import Vehiculo
 from .forms import VehiculoForm
 
@@ -15,7 +16,7 @@ def  vehiculo_list(request):
     if query:
         vehiculos_list = vehiculos_list.filter(
             Q(placa__icontains=query) |
-            Q(tipo__icontains=query)
+            Q(tipo__nombre__icontains=query)
         )
         
     # Filtro por estado
@@ -50,6 +51,7 @@ def vehiculo_detail(request, pk):
     return render(request, 'trucks/vehiculo_detail.html', {
         'vehiculo': vehiculo,
         'documentos': documentos,
+        'cumplimiento': cumplimiento_documental(vehiculo, False),
         'is_admin': is_admin,
     })
 

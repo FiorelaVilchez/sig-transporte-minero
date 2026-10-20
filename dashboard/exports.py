@@ -238,6 +238,64 @@ def generar_powerbi_trucks_con_documentos_csv(writer):
         count += 1
     return count
 
+def generar_powerbi_ejecucion_servicios_csv(writer):
+    """Ejecución de cada servicio (versión 2.0): estado, checklist, km, incidencias y gastos."""
+    writer.writerow([
+        "assignment_id", "request_id", "cliente", "fecha_servicio", "tipo_vehiculo",
+        "pasajeros", "duracion_horas", "conductor_nombre", "placa", "estado_operativo",
+        "checklist_aprobado", "km_inicial", "km_final", "km_recorridos",
+        "incidencias", "incidencias_graves", "total_gastos",
+    ])
+    count = 0
+    for asn in Asignacion.objects.select_related('solicitud', 'conductor', 'vehiculo').prefetch_related('incidencias', 'gastos'):
+        checklist = getattr(asn, 'checklist', None) if hasattr(asn, 'checklist') else None
+        incidencias = list(asn.incidencias.all())
+        writer.writerow([
+            asn.assignment_id,
+            asn.solicitud.request_id,
+            asn.solicitud.cliente,
+            _formatear_fecha(asn.solicitud.fecha_servicio),
+            asn.solicitud.tipo_vehiculo_requerido_id,
+            asn.solicitud.pasajeros,
+            asn.solicitud.duracion_horas,
+            f"{asn.conductor.nombres} {asn.conductor.apellidos}" if asn.conductor else "",
+            asn.vehiculo.placa if asn.vehiculo else "",
+            asn.estado_operativo,
+            "" if checklist is None else ("Sí" if checklist.aprobado else "No"),
+            asn.km_inicial if asn.km_inicial is not None else "",
+            asn.km_final if asn.km_final is not None else "",
+            asn.km_recorridos if asn.km_recorridos is not None else "",
+            len(incidencias),
+            sum(1 for i in incidencias if i.gravedad == 'Alta'),
+            asn.total_gastos,
+        ])
+        count += 1
+    return count
+
+
+def generar_powerbi_valorizaciones_csv(writer):
+    """Valorizaciones y ciclo de cobro (versión 2.0)."""
+    from billing.models import Valorizacion
+
+    writer.writerow([
+        "valorizacion_id", "request_id", "cliente", "fecha_servicio", "tipo_vehiculo",
+        "km_recorridos", "km_adicionales", "monto_base", "monto_adicional", "total", "estado",
+        "fecha_envio", "fecha_conformidad", "fecha_factura", "numero_factura", "fecha_pago", "dias_sin_conformidad",
+    ])
+    count = 0
+    for v in Valorizacion.objects.select_related('solicitud'):
+        writer.writerow([
+            v.pk, v.solicitud_id, v.solicitud.cliente, _formatear_fecha(v.solicitud.fecha_servicio),
+            v.solicitud.tipo_vehiculo_requerido_id, v.km_recorridos, v.km_adicionales,
+            v.monto_base, v.monto_adicional, v.total, v.estado,
+            _formatear_fecha(v.fecha_envio), _formatear_fecha(v.fecha_conformidad),
+            _formatear_fecha(v.fecha_factura), v.numero_factura, _formatear_fecha(v.fecha_pago),
+            v.dias_sin_conformidad,
+        ])
+        count += 1
+    return count
+
+
 def exportar_todos_los_csv_a_disco():
     exports_dir = os.path.join(settings.BASE_DIR, 'exports')
     os.makedirs(exports_dir, exist_ok=True)
@@ -251,6 +309,8 @@ def exportar_todos_los_csv_a_disco():
         'powerbi_asignaciones_completas.csv': generar_powerbi_asignaciones_completas_csv,
         'powerbi_drivers_con_documentos.csv': generar_powerbi_drivers_con_documentos_csv,
         'powerbi_trucks_con_documentos.csv': generar_powerbi_trucks_con_documentos_csv,
+        'powerbi_ejecucion_servicios.csv': generar_powerbi_ejecucion_servicios_csv,
+        'powerbi_valorizaciones.csv': generar_powerbi_valorizaciones_csv,
     }
     
     resumen = {}
