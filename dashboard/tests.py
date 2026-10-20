@@ -67,13 +67,13 @@ class DashboardKPIsTestCase(TestCase):
 
         self.vehiculo_a = Vehiculo.objects.create(
             placa="ABC-123",
-            tipo="Camioneta",
+            tipo_id="Camioneta",
             capacidad=5,
             estado="Disponible",
         )
         self.vehiculo_b = Vehiculo.objects.create(
             placa="XYZ-789",
-            tipo="Bus",
+            tipo_id="Bus",
             capacidad=40,
             estado="Disponible",
         )
@@ -172,7 +172,7 @@ class DashboardKPIsTestCase(TestCase):
             destino="Mina",
             tipo_servicio="Traslado de personal",
             prioridad="Media",
-            tipo_vehiculo_requerido="Camioneta",
+            tipo_vehiculo_requerido_id="Camioneta",
             estado_solicitud=estado,
         )
 
@@ -245,7 +245,7 @@ class KpiAsignacionesPorConductorLimiteTestCase(TestCase):
             destino="B",
             tipo_servicio="Traslado de carga",
             prioridad="Baja",
-            tipo_vehiculo_requerido="Camión",
+            tipo_vehiculo_requerido_id="Camión",
             estado_solicitud="Pendiente",
         )
 
@@ -379,7 +379,7 @@ class CSVExportTestCase(TestCase):
         )
         self.vehiculo = Vehiculo.objects.create(
             placa="ABC-123",
-            tipo="Camioneta",
+            tipo_id="Camioneta",
             capacidad=5,
             estado="Disponible",
         )
@@ -391,7 +391,7 @@ class CSVExportTestCase(TestCase):
             destino="B",
             tipo_servicio="Traslado de personal",
             prioridad="Alta",
-            tipo_vehiculo_requerido="Camioneta",
+            tipo_vehiculo_requerido_id="Camioneta",
             estado_solicitud="Pendiente"
         )
         self.asignacion = Asignacion.objects.create(

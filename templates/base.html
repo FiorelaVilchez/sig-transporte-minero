@@ -119,8 +119,17 @@
                     <!-- Asignación automática: Administrador de operaciones -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
-                        <a href="{% url 'assignments:solicitudes_pendientes' %}" class="sidebar-link {% if request.resolver_match.app_name == 'assignments' and request.resolver_match.url_name != 'mis_servicios' %}active{% endif %}">
+                        <a href="{% url 'assignments:solicitudes_pendientes' %}" class="sidebar-link {% if request.resolver_match.app_name == 'assignments' and request.resolver_match.url_name != 'mis_servicios' and request.resolver_match.url_name != 'programacion' %}active{% endif %}">
                             <i class="bi bi-cpu"></i> Asignación Automática
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Programación semanal (versión 2.0): Administrador, Supervisor, Gerencia -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
+                    <li>
+                        <a href="{% url 'assignments:programacion' %}" class="sidebar-link {% if request.resolver_match.url_name == 'programacion' %}active{% endif %}">
+                            <i class="bi bi-calendar-week"></i> Programación Semanal
                         </a>
                     </li>
                     {% endif %}
@@ -145,6 +154,24 @@
                     <li>
                         <a href="{% url 'dashboard:reportes' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
                             <i class="bi bi-graph-up"></i> Reportes Gerenciales
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Valorizaciones (versión 2.0): Finanzas, Administrador, Gerencia -->
+                    {% if user.perfilusuario.rol == 'Finanzas' or user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Gerencia' %}
+                    <li>
+                        <a href="{% url 'billing:valorizacion_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'billing' %}active{% endif %}">
+                            <i class="bi bi-receipt"></i> Valorizaciones
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Configuración de catálogos (versión 2.0): Administrador, Finanzas -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Finanzas' %}
+                    <li>
+                        <a href="{% url 'core:configuracion' %}" class="sidebar-link {% if request.resolver_match.url_name == 'configuracion' or request.resolver_match.url_name == 'catalogo_nuevo' or request.resolver_match.url_name == 'catalogo_editar' %}active{% endif %}">
+                            <i class="bi bi-sliders"></i> Configuración
                         </a>
                     </li>
                     {% endif %}

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}SIG — Solicitud #{{ solicitud.request_id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+        <a href="{% url 'service_requests:solicitud_list' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> Volver a Solicitudes
+        </a>
+        <h2 class="mb-0 text-dark">Solicitud #{{ solicitud.request_id }}</h2>
+        <span class="badge bg-dark fs-6">{{ solicitud.estado_solicitud }}</span>
+        {% if is_admin and solicitud.estado_solicitud != 'Completada' and solicitud.estado_solicitud != 'Cancelada' %}
+        <div class="ms-auto d-flex gap-2">
+            <a href="{% url 'service_requests:solicitud_update' solicitud.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil-fill me-1"></i> Editar</a>
+            <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#cancelarForm"><i class="bi bi-x-circle me-1"></i> Cancelar solicitud</button>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if is_admin %}
+    <div class="collapse mb-4" id="cancelarForm">
+        <div class="card card-premium border-danger">
+            <div class="card-body">
+                <form method="POST" action="{% url 'service_requests:solicitud_cancelar' solicitud.pk %}" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <div class="col-md-9">
+                        <label class="form-label fw-semibold font-monospace small">Motivo de la cancelación</label>
+                        <input type="text" name="motivo" class="form-control" maxlength="255" required placeholder="Ej. El cliente suspendió la guardia">
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-danger">Confirmar cancelación</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card card-premium accent-header h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Datos del servicio</h5>
+                    <div class="row g-3 small">
+                        <div class="col-12"><span class="text-muted d-block font-monospace fw-bold">Cliente</span>{{ solicitud.cliente }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Fecha y hora</span>{{ solicitud.fecha_servicio|date:"d/m/Y" }} {{ solicitud.hora_servicio|time:"H:i" }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Duración</span>{{ solicitud.duracion_horas }} h</div>
+                        <div class="col-12"><span class="text-muted d-block font-monospace fw-bold">Ruta</span>{{ solicitud.origen }} <i class="bi bi-arrow-right"></i> {{ solicitud.destino }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Tipo de servicio</span>{{ solicitud.tipo_servicio }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Prioridad</span>{{ solicitud.prioridad }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Vehículo requerido</span>{{ solicitud.tipo_vehiculo_requerido }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Pasajeros</span>{{ solicitud.pasajeros }}</div>
+                        <div class="col-6"><span class="text-muted d-block font-monospace fw-bold">Km estimados</span>{{ solicitud.km_estimados }}</div>
+                    </div>
+                    {% if valorizacion %}
+                    <hr>
+                    <h6 class="fw-bold">Valorización</h6>
+                    <p class="mb-0 small">S/ {{ valorizacion.total }} · <span class="badge bg-secondary">{{ valorizacion.estado }}</span></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card card-premium h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Asignaciones y ejecución</h5>
+                    {% for a in asignaciones %}
+                    <div class="border rounded p-3 mb-3 {% if a.estado_operativo == 'Cancelado' %}bg-light text-muted{% endif %}">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div>
+                                <strong>#{{ a.assignment_id }}</strong>
+                                {% if a.conductor %}{{ a.conductor.apellidos }}, {{ a.conductor.nombres }}{% endif %}
+                                {% if a.vehiculo %}· <span class="font-monospace">{{ a.vehiculo.placa }}</span> ({{ a.vehiculo.tipo }}){% endif %}
+                            </div>
+                            <div>
+                                <span class="badge {% if a.estado_asignacion == 'Aprobada' %}bg-success{% elif a.estado_asignacion == 'Observada' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ a.estado_asignacion }}</span>
+                                <span class="badge bg-dark">{{ a.estado_operativo }}</span>
+                            </div>
+                        </div>
+                        {% if a.observacion %}<div class="small text-muted mt-1">{{ a.observacion }}</div>{% endif %}
+                        <div class="small mt-2">
+                            {% if a.checklist %}
+                                <i class="bi bi-clipboard-check me-1"></i>Checklist:
+                                {% if a.checklist.aprobado %}<span class="text-success fw-semibold">aprobado</span>{% else %}<span class="text-danger fw-semibold">no aprobado</span> ({{ a.checklist.motivo_rechazo }}){% endif %}
+                                · sueño {{ a.checklist.horas_sueno }} h
+                            {% else %}
+                                <i class="bi bi-clipboard me-1"></i>Checklist pendiente
+                            {% endif %}
+                            {% if a.km_recorridos is not None %} · {{ a.km_recorridos }} km recorridos{% endif %}
+                        </div>
+                        {% for inc in a.incidencias.all %}
+                            <div class="small mt-1 text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ inc.fecha|date:"d/m H:i" }} · {{ inc.tipo }} ({{ inc.gravedad }}): {{ inc.descripcion }}</div>
+                        {% endfor %}
+                        {% if a.gastos.all %}
+                            <div class="small mt-1"><i class="bi bi-cash-coin me-1"></i>Gastos:
+                                {% for g in a.gastos.all %}{{ g.concepto }} S/ {{ g.monto }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                (total S/ {{ a.total_gastos }})
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">Aún no tiene asignaciones.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card card-premium">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-journal-text me-2"></i>Bitácora de cambios</h5>
+                    {% if cambios %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr><th>Fecha</th><th>Usuario</th><th>Campo</th><th>Antes</th><th>Después</th><th>Motivo</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for c in cambios %}
+                                <tr>
+                                    <td class="font-monospace small text-nowrap">{{ c.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td class="small">{{ c.usuario.get_full_name|default:c.usuario.username|default:"Sistema" }}</td>
+                                    <td class="small fw-semibold">{{ c.campo }}</td>
+                                    <td class="small text-muted">{{ c.valor_anterior|default:"—" }}</td>
+                                    <td class="small">{{ c.valor_nuevo|default:"—" }}</td>
+                                    <td class="small">{{ c.motivo|default:"—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Sin cambios registrados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

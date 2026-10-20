@@ -5,7 +5,7 @@ from django.test import TestCase
 from assignments.validators import validar_asignacion
 from drivers.models import Conductor
 from trucks.models import Vehiculo
-from documents.models import DocumentoConductor, DocumentoVehiculo
+from documents.models import DocumentoConductor, DocumentoVehiculo, RequisitoDocumental
 from service_requests.models import SolicitudServicio
 from assignments.models import Asignacion, Notificacion
 from assignments.services import asignar_automaticamente
@@ -15,6 +15,9 @@ class ValidarAsignacionTestCase(TestCase):
     """Pruebas del motor de validación — una por cada regla del Anexo B."""
 
     def setUp(self):
+        # Estas pruebas cubren las reglas R1 a R5 de la versión 1.0; la matriz de
+        # requisitos documentales de la versión 2.0 se prueba en tests_v2.py.
+        RequisitoDocumental.objects.all().delete()
         self.hoy = datetime.date.today()
         self.conductor_base = Conductor.objects.create(
             nombres="Test",
@@ -28,7 +31,7 @@ class ValidarAsignacionTestCase(TestCase):
         )
         self.vehiculo_base = Vehiculo.objects.create(
             placa="TST-001",
-            tipo="Camioneta",
+            tipo_id="Camioneta",
             capacidad=5,
             estado="Disponible",
         )
@@ -180,6 +183,9 @@ class AsignacionAutomaticaTestCase(TestCase):
     """Pruebas para el motor de asignación automática (Fase 7)."""
 
     def setUp(self):
+        # Estas pruebas cubren las reglas R1 a R5 de la versión 1.0; la matriz de
+        # requisitos documentales de la versión 2.0 se prueba en tests_v2.py.
+        RequisitoDocumental.objects.all().delete()
         self.hoy = datetime.date.today()
         # Crear una solicitud pendiente
         self.solicitud = SolicitudServicio.objects.create(
@@ -190,7 +196,7 @@ class AsignacionAutomaticaTestCase(TestCase):
             destino="Mina San Rafael",
             tipo_servicio="Traslado de personal",
             prioridad="Alta",
-            tipo_vehiculo_requerido="Camioneta",
+            tipo_vehiculo_requerido_id="Camioneta",
             estado_solicitud="Pendiente"
         )
         # Crear conductor
@@ -215,7 +221,7 @@ class AsignacionAutomaticaTestCase(TestCase):
         # Crear vehículo
         self.vehiculo = Vehiculo.objects.create(
             placa="TST-001",
-            tipo="Camioneta",
+            tipo_id="Camioneta",
             capacidad=5,
             estado="Disponible"
         )
@@ -229,7 +235,9 @@ class AsignacionAutomaticaTestCase(TestCase):
         )
 
     def test_sin_conductores_disponibles_reprograma(self):
-        self.conductor.estado = "Ocupado"
+        # Desde la versión 2.0 un conductor "Ocupado" (en ruta) puede tomar
+        # servicios futuros si el horario no se cruza; "No apto" no puede.
+        self.conductor.estado = "No apto"
         self.conductor.save()
         
         resultado = asignar_automaticamente(self.solicitud)
@@ -240,7 +248,7 @@ class AsignacionAutomaticaTestCase(TestCase):
 
     def test_sin_vehiculo_compatible_disponible_reprograma(self):
         # Cambiar el tipo de vehículo para simular incompatibilidad
-        self.vehiculo.tipo = "Bus"
+        self.vehiculo.tipo_id = "Bus"
         self.vehiculo.save()
 
         resultado = asignar_automaticamente(self.solicitud)
@@ -258,8 +266,10 @@ class AsignacionAutomaticaTestCase(TestCase):
         self.vehiculo.refresh_from_db()
         
         self.assertEqual(self.solicitud.estado_solicitud, "Asignada")
-        self.assertEqual(self.conductor.estado, "Ocupado")
-        self.assertEqual(self.vehiculo.estado, "En servicio")
+        # Versión 2.0: la reserva es por horario; los estados cambian al salir a ruta.
+        self.assertEqual(self.conductor.estado, "Disponible")
+        self.assertEqual(self.vehiculo.estado, "Disponible")
+        self.assertEqual(Asignacion.objects.get().estado_operativo, "Programado")
         
         # Verificar registro de Asignacion
         self.assertEqual(Asignacion.objects.count(), 1)
@@ -303,7 +313,7 @@ class AsignacionAutomaticaTestCase(TestCase):
             destino="B",
             tipo_servicio="Traslado de personal",
             prioridad="Media",
-            tipo_vehiculo_requerido="Camioneta",
+            tipo_vehiculo_requerido_id="Camioneta",
             estado_solicitud="Completada"
         )
         Asignacion.objects.create(

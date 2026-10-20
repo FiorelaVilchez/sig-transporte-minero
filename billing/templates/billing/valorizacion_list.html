@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Valorizaciones — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col d-flex flex-wrap align-items-center gap-3">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">Valorizaciones y Cobranza</h1>
+                <p class="text-muted mb-0">Cada servicio completado genera su valorización en borrador: tarifa base más los kilómetros que exceden lo incluido.</p>
+            </div>
+            <form method="POST" action="{% url 'billing:revisar_cobros' %}" class="ms-auto">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-custom"><i class="bi bi-alarm me-1"></i> Revisar cobros atrasados</button>
+            </form>
+        </div>
+        <div class="col-12"><hr class="mt-3"></div>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Por cobrar</div>
+                <div class="h4 fw-bold mb-0">S/ {{ por_cobrar|floatformat:2 }}</div>
+            </div></div>
+        </div>
+        {% for codigo, nombre, n, monto in resumen %}
+        <div class="col-md-4 col-xl">
+            <a href="?estado={{ codigo }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 {% if estado_filtro == codigo %}border-top border-3 border-warning{% endif %}"><div class="card-body">
+                <div class="text-muted small">{{ codigo }}</div>
+                <div class="h5 fw-bold mb-0 text-dark">{{ n }}</div>
+                <div class="small text-muted">S/ {{ monto|floatformat:2 }}</div>
+            </div></div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if atrasadas %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>{{ atrasadas|length }}</strong> valorización(es) enviadas hace más de {{ dias_alerta }} días sin conformidad del cliente:
+        {% for v in atrasadas %}<a href="{% url 'billing:valorizacion_detail' v.pk %}">#{{ v.solicitud_id }} ({{ v.dias_sin_conformidad }} días)</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Listado {% if estado_filtro %}<span class="badge bg-dark ms-1">{{ estado_filtro }}</span> <a href="?" class="small ms-2">Ver todas</a>{% endif %}</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr><th>Solicitud</th><th>Cliente</th><th>Fecha servicio</th><th>Tipo</th><th class="text-end">Km</th><th class="text-end">Total</th><th>Estado</th><th>Factura</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    {% for v in valorizaciones %}
+                        <tr>
+                            <td class="font-monospace fw-bold">#{{ v.solicitud_id }}</td>
+                            <td>{{ v.solicitud.cliente }}</td>
+                            <td>{{ v.solicitud.fecha_servicio|date:"d/m/Y" }}</td>
+                            <td>{{ v.solicitud.tipo_vehiculo_requerido }}</td>
+                            <td class="text-end">{{ v.km_recorridos }}</td>
+                            <td class="text-end fw-semibold text-nowrap">S/ {{ v.total|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge {% if v.estado == 'Pagada' %}bg-success{% elif v.estado == 'Observada' %}bg-danger{% elif v.estado == 'Borrador' %}bg-secondary{% else %}bg-primary{% endif %}">{{ v.estado }}</span>
+                                {% if v.cobro_atrasado %}<span class="badge bg-warning text-dark">{{ v.dias_sin_conformidad }} días</span>{% endif %}
+                                {% if not v.tarifa %}<span class="badge bg-light text-danger border">Sin tarifa</span>{% endif %}
+                            </td>
+                            <td class="font-monospace small">{{ v.numero_factura|default:"—" }}</td>
+                            <td class="text-end"><a href="{% url 'billing:valorizacion_detail' v.pk %}" class="btn btn-sm btn-outline-primary">Ver</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center text-muted py-4">No hay valorizaciones{% if estado_filtro %} en este estado{% endif %}.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

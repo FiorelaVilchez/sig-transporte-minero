@@ -31,6 +31,15 @@
         </div>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="row">
         <!-- Main Column: Services and Notifications -->
         <div class="col-lg-8">
@@ -65,10 +74,112 @@
                 </div>
             </div>
 
+            <!-- SECTION: SERVICIOS ACTIVOS (versión 2.0) -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-signpost-split me-2"></i>Mis Próximos Servicios</h5>
+                    <span class="small text-muted">Horas programadas esta semana: <strong class="text-dark">{{ horas_semana }}</strong> de {{ limite_semana }}</span>
+                </div>
+                <div class="card-body">
+                    {% for asig in activas %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                            <div>
+                                <div class="fw-bold text-dark">#{{ asig.solicitud.request_id }} · {{ asig.solicitud.cliente }}</div>
+                                <div class="small text-muted">{{ asig.solicitud.fecha_servicio|date:"d/m/Y" }} {{ asig.solicitud.hora_servicio|time:"H:i" }} · {{ asig.solicitud.duracion_horas }} h · {{ asig.solicitud.pasajeros }} pasajeros</div>
+                                <div class="small">{{ asig.solicitud.origen }} <i class="bi bi-arrow-right"></i> {{ asig.solicitud.destino }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-secondary font-monospace">{{ asig.vehiculo.placa }}</span>
+                                <div class="small text-muted">{{ asig.vehiculo.tipo }}</div>
+                                {% if asig.estado_operativo == 'Programado' %}
+                                    <span class="badge bg-primary mt-1">Programado</span>
+                                {% elif asig.estado_operativo == 'Listo para salir' %}
+                                    <span class="badge bg-info text-dark mt-1">Listo para salir</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark mt-1">En ruta</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if asig.estado_operativo == 'Programado' %}
+                            <a href="{% url 'assignments:checklist' asig.assignment_id %}" class="btn btn-sm btn-accent">
+                                <i class="bi bi-clipboard-check me-1"></i> Llenar checklist preoperacional
+                            </a>
+                        {% elif asig.estado_operativo == 'Listo para salir' %}
+                            <form method="POST" action="{% url 'assignments:iniciar_ruta' asig.assignment_id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-accent"><i class="bi bi-play-fill me-1"></i> Iniciar ruta</button>
+                            </form>
+                        {% endif %}
+
+                        {% if asig.estado_operativo != 'Programado' %}
+                        <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#inc{{ asig.assignment_id }}"><i class="bi bi-exclamation-triangle me-1"></i> Reportar incidencia</button>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#gas{{ asig.assignment_id }}"><i class="bi bi-cash-coin me-1"></i> Registrar gasto</button>
+                        {% endif %}
+                        {% if asig.estado_operativo == 'En ruta' %}
+                        <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#fin{{ asig.assignment_id }}"><i class="bi bi-flag-fill me-1"></i> Finalizar servicio</button>
+                        {% endif %}
+
+                        <div class="collapse mt-3" id="inc{{ asig.assignment_id }}">
+                            <form method="POST" action="{% url 'assignments:incidencia' asig.assignment_id %}" class="row g-2">
+                                {% csrf_token %}
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Tipo</label>
+                                    <select name="tipo" class="form-select form-select-sm">{% for v, l in tipos_incidencia %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Gravedad</label>
+                                    <select name="gravedad" class="form-select form-select-sm">{% for v, l in gravedades %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+                                </div>
+                                <div class="col-12">
+                                    <textarea name="descripcion" rows="2" class="form-control form-control-sm" placeholder="¿Qué ocurrió y dónde?" required></textarea>
+                                </div>
+                                <div class="col-12"><button type="submit" class="btn btn-sm btn-danger">Enviar incidencia</button></div>
+                            </form>
+                        </div>
+                        <div class="collapse mt-3" id="gas{{ asig.assignment_id }}">
+                            <form method="POST" action="{% url 'assignments:gasto' asig.assignment_id %}" class="row g-2 align-items-end">
+                                {% csrf_token %}
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Concepto</label>
+                                    <select name="concepto" class="form-select form-select-sm">{% for v, l in conceptos_gasto %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Monto (S/)</label>
+                                    <input type="number" name="monto" step="0.01" min="0.01" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold">Detalle</label>
+                                    <input type="text" name="detalle" maxlength="150" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-12"><button type="submit" class="btn btn-sm btn-dark">Guardar gasto</button></div>
+                            </form>
+                            {% if asig.gastos.all %}
+                            <div class="small text-muted mt-2">Registrados: {% for g in asig.gastos.all %}{{ g.concepto }} S/ {{ g.monto }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="collapse mt-3" id="fin{{ asig.assignment_id }}">
+                            <form method="POST" action="{% url 'assignments:finalizar' asig.assignment_id %}" class="row g-2 align-items-end">
+                                {% csrf_token %}
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Kilometraje final (inicial: {{ asig.km_inicial|default:"—" }})</label>
+                                    <input type="number" name="km_final" min="{{ asig.km_inicial|default:0 }}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-6"><button type="submit" class="btn btn-sm btn-success">Confirmar llegada</button></div>
+                            </form>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0 text-center py-3">No tiene servicios programados.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
             <!-- SECTION: SERVICIOS ASIGNADOS -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-clipboard-check me-2"></i>Mis Servicios Asignados</h5>
+                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Historial de Servicios</h5>
                 </div>
                 <div class="card-body">
                     {% if asignaciones %}
@@ -109,12 +220,12 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if asig.solicitud.estado_solicitud == 'Asignada' %}
-                                            <span class="badge bg-primary">Programado</span>
-                                        {% elif asig.solicitud.estado_solicitud == 'Completada' %}
+                                        {% if asig.estado_operativo == 'Completado' %}
                                             <span class="badge bg-success">Completado</span>
+                                        {% elif asig.estado_operativo == 'Con incidencia' %}
+                                            <span class="badge bg-danger">Con incidencia</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">{{ asig.solicitud.estado_solicitud }}</span>
+                                            <span class="badge bg-secondary">{{ asig.estado_operativo }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -125,7 +236,7 @@
                     {% else %}
                     <div class="text-center py-4">
                         <i class="bi bi-calendar-x text-muted" style="font-size: 2.5rem;"></i>
-                        <h6 class="mt-2 text-dark mb-0">No posees servicios de transporte asignados en este momento.</h6>
+                        <h6 class="mt-2 text-dark mb-0">Aún no hay servicios cerrados en su historial.</h6>
                     </div>
                     {% endif %}
                 </div>
@@ -158,7 +269,8 @@
                                 </div>
                                 <div class="row small text-muted font-monospace">
                                     <div class="col-6">Emisión: {{ doc.fecha_emision|date:"d/m/Y" }}</div>
-                                    <div class="col-6 text-end">Vence: {{ doc.fecha_vencimiento|date:"d/m/Y" }}</div>
+                                    <div class="col-6 text-end">Vence: {{ doc.fecha_vencimiento|date:"d/m/Y"|default:"No vence" }}</div>
+                                    {% if doc.estado_mina == 'Pendiente' or doc.estado_mina == 'Observado' %}<div class="col-12 mt-1"><span class="badge bg-warning text-dark">Visto bueno de mina: {{ doc.estado_mina }}</span></div>{% endif %}
                                 </div>
                             </div>
                             {% endfor %}

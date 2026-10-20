@@ -72,13 +72,48 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Especialidad -->
+                            <!-- Categoría de licencia -->
                             <div class="col-md-6">
-                                <label for="{{ form.especialidad.id_for_label }}" class="form-label fw-semibold font-monospace small">Especialidad</label>
-                                {% render_field form.especialidad class="form-control" placeholder="Ej. Camión volquete, Semirremolque..." %}
-                                {% if form.especialidad.errors %}
+                                <label for="{{ form.categoria_licencia.id_for_label }}" class="form-label fw-semibold font-monospace small">Categoría de Licencia</label>
+                                {% render_field form.categoria_licencia class="form-select" %}
+                                {% if form.categoria_licencia.errors %}
                                     <div class="text-danger small mt-1">
-                                        {% for error in form.especialidad.errors %}{{ error }}{% endfor %}
+                                        {% for error in form.categoria_licencia.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Fecha de obtención de la licencia -->
+                            <div class="col-md-6">
+                                <label for="{{ form.fecha_obtencion_licencia.id_for_label }}" class="form-label fw-semibold font-monospace small">Fecha de Obtención de la Licencia</label>
+                                {% render_field form.fecha_obtencion_licencia class="form-control font-monospace" %}
+                                <div class="form-text">Se usa para calcular los años de experiencia que exige cada tipo de vehículo.</div>
+                                {% if form.fecha_obtencion_licencia.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.fecha_obtencion_licencia.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tipos de vehículo habilitados -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold font-monospace small">Tipos de Vehículo que Puede Manejar</label>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="row g-2">
+                                        {% for checkbox in form.tipos_habilitados %}
+                                        <div class="col-sm-6 col-md-3">
+                                            <div class="form-check">
+                                                {{ checkbox.tag }}
+                                                <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="form-text">Marque solo los tipos para los que el conductor está habilitado. El motor de asignación no le asignará otros (regla R6).</div>
+                                {% if form.tipos_habilitados.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.tipos_habilitados.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
                             </div>

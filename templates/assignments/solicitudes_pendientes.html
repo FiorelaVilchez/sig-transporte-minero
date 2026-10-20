@@ -7,7 +7,8 @@
     <div class="row mb-4">
         <div class="col">
             <h1 class="h3 mb-1 fw-bold text-dark">Programación y Asignación de Servicios</h1>
-            <p class="text-muted mb-0">Gestión de recursos de transporte minero y verificación de cumplimiento documental.</p>
+            <p class="text-muted mb-0">Gestión de recursos de transporte minero y verificación de cumplimiento documental. El motor evalúa las reglas R1 a R10 contra el horario de cada servicio.
+                <a href="{% url 'assignments:programacion' %}" class="ms-2"><i class="bi bi-calendar-week me-1"></i>Ver programación semanal</a></p>
             <hr class="mt-3">
         </div>
     </div>
@@ -226,6 +227,7 @@
                                     <th>Conductor Asignado</th>
                                     <th>Vehículo Asignado</th>
                                     <th>Estado Asignación</th>
+                                    <th>Estado Servicio</th>
                                     <th>Observaciones / Advertencias</th>
                                     <th>Fecha Asignación</th>
                                     {% if es_admin %}
@@ -237,7 +239,7 @@
                                 {% for item in historial %}
                                 <tr>
                                     <td><strong>#{{ item.assignment_id }}</strong></td>
-                                    <td>#{{ item.solicitud.request_id }}</td>
+                                    <td><a href="{% url 'service_requests:solicitud_detail' item.solicitud.pk %}" class="text-decoration-none">#{{ item.solicitud.request_id }}</a></td>
                                     <td>{{ item.solicitud.cliente }}</td>
                                     <td>
                                         {% if item.conductor %}
@@ -267,13 +269,14 @@
                                             <span class="badge bg-secondary">{{ item.estado_asignacion }}</span>
                                         {% endif %}
                                     </td>
+                                    <td><span class="badge bg-dark">{{ item.estado_operativo }}</span></td>
                                     <td class="small text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ item.observacion }}">
                                         {{ item.observacion|default:"Sin observaciones" }}
                                     </td>
                                     <td>{{ item.fecha_asignacion|date:"d/m/Y H:i" }}</td>
                                     {% if es_admin %}
                                     <td class="text-center">
-                                        {% if item.solicitud.estado_solicitud == 'Asignada' %}
+                                        {% if item.solicitud.estado_solicitud == 'Asignada' and item.estado_operativo != 'Cancelado' %}
                                             <a href="{% url 'assignments:completar_servicio' item.solicitud.request_id %}" class="btn btn-xs btn-success d-inline-flex align-items-center py-1 px-2" style="font-size: 0.75rem;">
                                                 <i class="bi bi-check2-all me-1"></i> Completar
                                             </a>

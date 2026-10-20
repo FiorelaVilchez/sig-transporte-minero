@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Valorización #{{ v.solicitud_id }} — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+        <a href="{% url 'billing:valorizacion_list' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2"><i class="bi bi-arrow-left"></i> Volver</a>
+        <h2 class="mb-0 text-dark">Valorización de la solicitud #{{ v.solicitud_id }}</h2>
+        <span class="badge bg-dark fs-6">{{ v.estado }}</span>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card card-premium accent-header">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Cálculo</h5>
+                    <table class="table table-sm mb-3">
+                        <tr><td>Cliente</td><td class="text-end">{{ v.solicitud.cliente }}</td></tr>
+                        <tr><td>Servicio</td><td class="text-end">{{ v.solicitud.fecha_servicio|date:"d/m/Y" }} · {{ v.solicitud.origen }} → {{ v.solicitud.destino }}</td></tr>
+                        <tr><td>Tipo de unidad</td><td class="text-end">{{ v.solicitud.tipo_vehiculo_requerido }}</td></tr>
+                        <tr><td>Tarifa base</td><td class="text-end">S/ {{ v.monto_base|floatformat:2 }}</td></tr>
+                        <tr><td>Km recorridos / incluidos</td><td class="text-end">{{ v.km_recorridos }} / {{ v.tarifa.km_incluidos|default:"—" }}</td></tr>
+                        <tr><td>Km adicionales × S/ {{ v.tarifa.precio_km_adicional|default:"0" }}</td><td class="text-end">{{ v.km_adicionales }} km = S/ {{ v.monto_adicional|floatformat:2 }}</td></tr>
+                        <tr class="fw-bold"><td>Total</td><td class="text-end">S/ {{ v.total|floatformat:2 }}</td></tr>
+                    </table>
+                    {% if v.observacion %}<div class="alert alert-light border small mb-0"><i class="bi bi-info-circle me-1"></i>{{ v.observacion }}</div>{% endif %}
+                    {% if asignacion %}
+                    <hr>
+                    <p class="small mb-1"><strong>Ejecutó:</strong> {{ asignacion.conductor.apellidos }}, {{ asignacion.conductor.nombres }} · <span class="font-monospace">{{ asignacion.vehiculo.placa }}</span></p>
+                    {% if asignacion.gastos.all %}
+                    <p class="small mb-0"><strong>Gastos del servicio (costo interno):</strong>
+                        {% for g in asignacion.gastos.all %}{{ g.concepto }} S/ {{ g.monto }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        · total S/ {{ asignacion.total_gastos }}</p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card card-premium">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Ciclo de cobro</h5>
+                    <ul class="list-unstyled small mb-3">
+                        <li>Enviada: {{ v.fecha_envio|date:"d/m/Y"|default:"—" }}{% if v.dias_sin_conformidad %} ({{ v.dias_sin_conformidad }} días sin conformidad){% endif %}</li>
+                        <li>Conforme: {{ v.fecha_conformidad|date:"d/m/Y"|default:"—" }}</li>
+                        <li>Facturada: {{ v.fecha_factura|date:"d/m/Y"|default:"—" }} {% if v.numero_factura %}· {{ v.numero_factura }}{% endif %}</li>
+                        <li>Pagada: {{ v.fecha_pago|date:"d/m/Y"|default:"—" }}</li>
+                    </ul>
+                    {% if puede_editar %}
+                        {% if v.estado == 'Borrador' or v.estado == 'Observada' %}
+                        <form method="POST" action="{% url 'billing:valorizacion_recalcular' v.pk %}" class="mb-3">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-repeat me-1"></i> Recalcular con la tarifa vigente</button>
+                        </form>
+                        {% endif %}
+                        {% for siguiente in v.siguientes_estados %}
+                        <form method="POST" action="{% url 'billing:valorizacion_estado' v.pk %}" class="border rounded p-2 mb-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="estado" value="{{ siguiente }}">
+                            {% if siguiente == 'Facturada' %}
+                                <input type="text" name="numero_factura" class="form-control form-control-sm mb-2" placeholder="N.º de factura (ej. F001-000123)" required>
+                            {% elif siguiente == 'Observada' %}
+                                <input type="text" name="observacion" class="form-control form-control-sm mb-2" placeholder="Observación del cliente" required>
+                            {% endif %}
+                            <button class="btn btn-sm {% if siguiente == 'Observada' %}btn-outline-danger{% else %}btn-accent{% endif %} w-100">Marcar como {{ siguiente }}</button>
+                        </form>
+                        {% empty %}
+                        <p class="text-success small mb-0"><i class="bi bi-check-circle-fill me-1"></i>Ciclo cerrado.</p>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted small mb-0">Solo el rol Finanzas cambia el estado de la valorización.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,133 +1,268 @@
-from django.db import models
-from service_requests.models import SolicitudServicio
-from drivers.models import Conductor
-from trucks.models import Vehiculo
+from django.db import models, transaction
+from django.utils import timezone
+
+from alerts.services import generar_alerta
 from assignments.models import Asignacion, Notificacion
-from assignments.validators import validar_asignacion
+from assignments.validators import horas_programadas_semana, validar_asignacion
+from drivers.models import Conductor
+from service_requests.services import registrar_cambio
+from trucks.models import Vehiculo
 
-def asignar_automaticamente(solicitud):
-    """
-    Realiza la asignación automática de conductor y vehículo para una solicitud.
-    Sigue el flujo de la Figura 3 del proyecto.
-    """
-    if solicitud.estado_solicitud != "Pendiente" and solicitud.estado_solicitud != "Reprogramada":
-        return {
-            "exito": False,
-            "asignacion": None,
-            "mensaje": f"La solicitud no está en un estado programable (estado actual: {solicitud.estado_solicitud})."
-        }
 
-    # a) Buscar candidatos disponibles
-    conductores_candidatos = Conductor.objects.filter(estado="Disponible")
-    vehiculos_candidatos = Vehiculo.objects.filter(
-        estado="Disponible", 
-        tipo=solicitud.tipo_vehiculo_requerido
+def _notificar(conductor, mensaje):
+    return Notificacion.objects.create(conductor=conductor, mensaje=mensaje[:255], leida=False)
+
+
+def confirmar_asignacion(solicitud, conductor, vehiculo, resultado, *, observacion_extra='', usuario=None, manual=False):
+    """
+    Registra la asignación aprobada u observada y notifica al conductor.
+    Desde la versión 2.0 la disponibilidad se controla por horario (R9), por lo
+    que el conductor y el vehículo no pasan a Ocupado / En servicio hasta que
+    el servicio sale a ruta.
+    """
+    observaciones = list(resultado.get('observaciones', []))
+    if observacion_extra:
+        observaciones.append(observacion_extra)
+    with transaction.atomic():
+        asignacion = Asignacion.objects.create(
+            solicitud=solicitud,
+            conductor=conductor,
+            vehiculo=vehiculo,
+            estado_asignacion=resultado['veredicto'],
+            estado_operativo='Programado',
+            observacion=", ".join(observaciones),
+        )
+        anterior = solicitud.estado_solicitud
+        solicitud.estado_solicitud = "Asignada"
+        solicitud.save()
+        registrar_cambio(
+            solicitud, usuario, 'Estado de Solicitud', anterior, 'Asignada',
+            f"{'Asignación manual' if manual else 'Asignación automática'}: "
+            f"{conductor.apellidos}, {conductor.nombres} / {vehiculo.placa}",
+        )
+    prefijo = "Manual: " if manual else ""
+    _notificar(
+        conductor,
+        f"{prefijo}Nuevo servicio asignado: {solicitud.cliente} el {solicitud.fecha_servicio:%d/%m/%Y} "
+        f"a las {solicitud.hora_servicio:%H:%M}. Ruta: {solicitud.origen} -> {solicitud.destino}. "
+        f"Unidad {vehiculo.placa}.",
     )
+    return asignacion
 
-    # b) Si no hay conductores o vehículos compatibles, reprogramar
-    if not conductores_candidatos.exists():
-        solicitud.estado_solicitud = "Reprogramada"
-        solicitud.save()
+
+def candidatos_para(solicitud):
+    """Conductores y vehículos que pueden evaluarse para la solicitud, ya ordenados."""
+    conductores = list(
+        Conductor.objects.filter(estado__in=["Disponible", "Ocupado"])
+        .annotate(total_assignments=models.Count('asignaciones'))
+        .order_by('total_assignments', 'apellidos', 'nombres')
+    )
+    # Equidad (M5): primero quien tiene menos horas programadas en la semana.
+    for c in conductores:
+        c.horas_semana = horas_programadas_semana(c, solicitud.fecha_servicio, excluir_solicitud=solicitud)
+    conductores.sort(key=lambda c: (c.horas_semana, c.total_assignments, c.apellidos, c.nombres))
+
+    # Vehículos del tipo requerido; primero la unidad más chica que alcanza.
+    vehiculos = (
+        Vehiculo.objects.filter(tipo=solicitud.tipo_vehiculo_requerido)
+        .exclude(estado__in=["En mantenimiento", "De baja"])
+        .order_by('capacidad', 'placa')
+    )
+    return conductores, list(vehiculos)
+
+
+def asignar_automaticamente(solicitud, usuario=None):
+    """
+    Asignación automática: busca la primera combinación Aprobada (y si no hay,
+    la primera Observada) evaluando R1 a R10 contra el horario de la solicitud.
+    """
+    if solicitud.estado_solicitud not in ("Pendiente", "Reprogramada"):
         return {
             "exito": False,
             "asignacion": None,
-            "mensaje": "No hay conductores disponibles. Solicitud reprogramada."
+            "mensaje": f"La solicitud no está en un estado programable (estado actual: {solicitud.estado_solicitud}).",
         }
 
-    if not vehiculos_candidatos.exists():
+    conductores, vehiculos = candidatos_para(solicitud)
+
+    def reprogramar(motivo):
+        anterior = solicitud.estado_solicitud
         solicitud.estado_solicitud = "Reprogramada"
         solicitud.save()
-        return {
-            "exito": False,
-            "asignacion": None,
-            "mensaje": f"No hay vehículos disponibles del tipo requerido ({solicitud.tipo_vehiculo_requerido}). Solicitud reprogramada."
-        }
+        if anterior != "Reprogramada":
+            registrar_cambio(solicitud, usuario, 'Estado de Solicitud', anterior, 'Reprogramada', motivo)
+        return {"exito": False, "asignacion": None, "mensaje": motivo}
 
-    # c) Ordenar candidatos
-    # Conductores por equidad: menor cantidad de asignaciones históricas totales
-    conductores_candidatos = conductores_candidatos.annotate(
-        total_assignments=models.Count('asignaciones')
-    ).order_by('total_assignments', 'apellidos', 'nombres')
+    if not conductores:
+        return reprogramar("No hay conductores disponibles. Solicitud reprogramada.")
+    if not vehiculos:
+        return reprogramar(
+            f"No hay vehículos disponibles del tipo requerido ({solicitud.tipo_vehiculo_requerido}). Solicitud reprogramada."
+        )
 
-    # Vehículos por placa de forma determinista
-    vehiculos_candidatos = vehiculos_candidatos.order_by('placa')
-
-    # Recorrer combinaciones para buscar Aprobada
-    mejor_comb = None
-    veredicto_mejor = None
-    detalles_mejor = None
-
-    # Primero buscamos una "Aprobada"
-    for conductor in conductores_candidatos:
-        for vehiculo in vehiculos_candidatos:
-            resultado = validar_asignacion(conductor, vehiculo, generar_alertas=False)
+    mejor = None
+    observada = None
+    motivos = {}
+    for conductor in conductores:
+        for vehiculo in vehiculos:
+            resultado = validar_asignacion(conductor, vehiculo, solicitud=solicitud, generar_alertas=False)
             if resultado['veredicto'] == "Aprobada":
-                mejor_comb = (conductor, vehiculo)
-                veredicto_mejor = "Aprobada"
-                detalles_mejor = resultado
+                mejor = (conductor, vehiculo)
                 break
-        if mejor_comb:
+            if resultado['veredicto'] == "Observada" and observada is None:
+                observada = (conductor, vehiculo)
+            for b in resultado['bloqueos']:
+                regla = b.split(':')[0]
+                motivos[regla] = motivos.get(regla, 0) + 1
+        if mejor:
             break
 
-    # Si no hay "Aprobada", buscamos una "Observada"
-    if not mejor_comb:
-        for conductor in conductores_candidatos:
-            for vehiculo in vehiculos_candidatos:
-                resultado = validar_asignacion(conductor, vehiculo, generar_alertas=False)
-                if resultado['veredicto'] == "Observada":
-                    mejor_comb = (conductor, vehiculo)
-                    veredicto_mejor = "Observada"
-                    detalles_mejor = resultado
-                    break
-            if mejor_comb:
-                break
+    elegido = mejor or observada
+    if not elegido:
+        resumen = ", ".join(f"{r} ({n})" for r, n in sorted(motivos.items()))
+        return reprogramar(
+            "Ninguna combinación de conductor y vehículo cumple las reglas. Solicitud reprogramada."
+            + (f" Bloqueos encontrados: {resumen}." if resumen else "")
+        )
 
-    # Si ninguna combinación es Aprobada u Observada
-    if not mejor_comb:
-        solicitud.estado_solicitud = "Reprogramada"
-        solicitud.save()
-        return {
-            "exito": False,
-            "asignacion": None,
-            "mensaje": "Todos los recursos disponibles tienen bloqueos documentales. Solicitud reprogramada."
-        }
-
-    # d) Se encontró una combinación válida
-    conductor_elegido, vehiculo_elegido = mejor_comb
-
-    # Ejecutar de nuevo con generar_alertas=True para que se guarden en DB las alertas de la asignación seleccionada
-    resultado_persistido = validar_asignacion(conductor_elegido, vehiculo_elegido, generar_alertas=True)
-
-    # Crear Asignacion
-    obs_texto = ", ".join(resultado_persistido.get('observaciones', []))
-    asignacion = Asignacion.objects.create(
-        solicitud=solicitud,
-        conductor=conductor_elegido,
-        vehiculo=vehiculo_elegido,
-        estado_asignacion=veredicto_mejor,
-        observacion=obs_texto
-    )
-
-    # Actualizar estados
-    conductor_elegido.estado = "Ocupado"
-    conductor_elegido.save()
-
-    vehiculo_elegido.estado = "En servicio"
-    vehiculo_elegido.save()
-
-    solicitud.estado_solicitud = "Asignada"
-    solicitud.save()
-
-    # Generar notificación para el conductor
-    mensaje_notif = f"Nuevo servicio asignado: {solicitud.cliente} el {solicitud.fecha_servicio} a las {solicitud.hora_servicio}. Ruta: {solicitud.origen} -> {solicitud.destino}."
-    Notificacion.objects.create(
-        conductor=conductor_elegido,
-        mensaje=mensaje_notif,
-        leida=False
-    )
-
+    conductor, vehiculo = elegido
+    resultado = validar_asignacion(conductor, vehiculo, solicitud=solicitud, generar_alertas=True)
+    asignacion = confirmar_asignacion(solicitud, conductor, vehiculo, resultado, usuario=usuario)
     return {
         "exito": True,
         "asignacion": asignacion,
-        "mensaje": f"Asignación automática exitosa ({veredicto_mejor}) con Conductor {conductor_elegido} y Vehículo {vehiculo_elegido}."
+        "mensaje": f"Asignación automática exitosa ({resultado['veredicto']}) con Conductor {conductor} y Vehículo {vehiculo}.",
     }
+
+
+def asignacion_vigente(solicitud):
+    return (
+        Asignacion.objects.filter(solicitud=solicitud, estado_asignacion__in=['Aprobada', 'Observada'])
+        .exclude(estado_operativo='Cancelado')
+        .select_related('conductor', 'vehiculo')
+        .order_by('-fecha_asignacion')
+        .first()
+    )
+
+
+def _liberar_recursos(asignacion, vehiculo_a_mantenimiento=False):
+    if asignacion.conductor and asignacion.conductor.estado == "Ocupado":
+        asignacion.conductor.estado = "Disponible"
+        asignacion.conductor.save()
+    if asignacion.vehiculo:
+        if vehiculo_a_mantenimiento:
+            asignacion.vehiculo.estado = "En mantenimiento"
+            asignacion.vehiculo.save()
+        elif asignacion.vehiculo.estado == "En servicio":
+            asignacion.vehiculo.estado = "Disponible"
+            asignacion.vehiculo.save()
+
+
+def registrar_checklist(asignacion, checklist):
+    """Guarda el checklist (M3). Si aprueba, el servicio queda Listo para salir."""
+    checklist.asignacion = asignacion
+    checklist.evaluar()
+    checklist.save()
+    if checklist.aprobado:
+        asignacion.estado_operativo = 'Listo para salir'
+        asignacion.km_inicial = checklist.km_inicial
+        asignacion.save()
+    else:
+        generar_alerta(
+            nivel_riesgo="Alto",
+            tipo_alerta="Checklist no aprobado",
+            mensaje=(
+                f"Checklist no aprobado: solicitud #{asignacion.solicitud_id}, unidad "
+                f"{asignacion.vehiculo.placa}. {checklist.motivo_rechazo}"
+            )[:255],
+        )
+    return checklist
+
+
+def iniciar_ruta(asignacion, usuario=None):
+    asignacion.estado_operativo = 'En ruta'
+    asignacion.inicio_real = timezone.now()
+    asignacion.save()
+    asignacion.conductor.estado = "Ocupado"
+    asignacion.conductor.save()
+    asignacion.vehiculo.estado = "En servicio"
+    asignacion.vehiculo.save()
+    registrar_cambio(asignacion.solicitud, usuario, 'Estado del servicio', 'Listo para salir', 'En ruta', 'Salida registrada por el conductor')
+
+
+def completar_servicio(asignacion, *, km_final=None, usuario=None):
+    """Cierra el servicio, libera recursos y genera la valorización en borrador (M6)."""
+    solicitud = asignacion.solicitud
+    with transaction.atomic():
+        if km_final is not None:
+            asignacion.km_final = km_final
+        asignacion.estado_operativo = 'Completado'
+        asignacion.fin_real = timezone.now()
+        asignacion.save()
+        _liberar_recursos(asignacion)
+        anterior = solicitud.estado_solicitud
+        solicitud.estado_solicitud = "Completada"
+        solicitud.save()
+        registrar_cambio(solicitud, usuario, 'Estado de Solicitud', anterior, 'Completada', 'Servicio finalizado')
+    from billing.services import generar_valorizacion
+    return generar_valorizacion(solicitud)
+
+
+def reportar_incidencia(asignacion, incidencia, usuario=None):
+    """
+    Registra la incidencia (M4). Si es grave, el servicio pasa a Con incidencia,
+    se liberan los recursos y la solicitud vuelve a Reprogramada para reasignar.
+    """
+    incidencia.asignacion = asignacion
+    incidencia.save()
+    solicitud = asignacion.solicitud
+    generar_alerta(
+        nivel_riesgo="Alto" if incidencia.gravedad == "Alta" else "Medio",
+        tipo_alerta="Incidencia operativa",
+        mensaje=(
+            f"{incidencia.tipo} en el servicio #{solicitud.request_id} "
+            f"({asignacion.vehiculo.placa}): {incidencia.descripcion}"
+        )[:255],
+    )
+    if incidencia.gravedad == "Alta":
+        with transaction.atomic():
+            asignacion.estado_operativo = 'Con incidencia'
+            asignacion.save()
+            _liberar_recursos(asignacion, vehiculo_a_mantenimiento=incidencia.tipo == 'Falla mecánica')
+            anterior = solicitud.estado_solicitud
+            solicitud.estado_solicitud = "Reprogramada"
+            solicitud.save()
+            registrar_cambio(
+                solicitud, usuario, 'Estado de Solicitud', anterior, 'Reprogramada',
+                f"Incidencia grave: {incidencia.tipo}. Requiere reemplazo.",
+            )
+    return incidencia
+
+
+def revalidar_por_cambio(solicitud, usuario=None, motivo=''):
+    """
+    Tras cambiar fecha, hora, duración, pasajeros o tipo de una solicitud ya
+    asignada (M2), vuelve a validar la asignación. Si ya no cumple, la cancela,
+    deja la solicitud Reprogramada y avisa al conductor.
+    """
+    asignacion = asignacion_vigente(solicitud)
+    if not asignacion or asignacion.estado_operativo not in ('Programado', 'Listo para salir'):
+        return None
+    resultado = validar_asignacion(asignacion.conductor, asignacion.vehiculo, solicitud=solicitud, generar_alertas=False)
+    tipo_distinto = asignacion.vehiculo.tipo_id != solicitud.tipo_vehiculo_requerido_id
+    if resultado['veredicto'] == 'Rechazada' or tipo_distinto:
+        asignacion.estado_operativo = 'Cancelado'
+        asignacion.observacion = (asignacion.observacion + ', ' if asignacion.observacion else '') + \
+            'Cancelada por cambio en la solicitud: ' + '; '.join(resultado['bloqueos'] or ['tipo de vehículo distinto'])
+        asignacion.save()
+        solicitud.estado_solicitud = 'Reprogramada'
+        solicitud.save()
+        registrar_cambio(solicitud, usuario, 'Estado de Solicitud', 'Asignada', 'Reprogramada',
+                         'La asignación ya no cumple las reglas tras el cambio')
+        _notificar(asignacion.conductor,
+                   f"Se canceló su servicio #{solicitud.request_id} ({solicitud.cliente}) por un cambio en la solicitud.")
+        return {'cancelada': True, 'bloqueos': resultado['bloqueos']}
+    _notificar(asignacion.conductor,
+               f"Cambio en su servicio #{solicitud.request_id}: {solicitud.fecha_servicio:%d/%m/%Y} "
+               f"{solicitud.hora_servicio:%H:%M}, {solicitud.origen} -> {solicitud.destino}. {motivo}")
+    return {'cancelada': False, 'bloqueos': []}

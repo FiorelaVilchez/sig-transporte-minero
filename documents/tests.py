@@ -33,7 +33,7 @@ class DocumentoViewsTestCase(TestCase):
         )
         self.vehiculo = Vehiculo.objects.create(
             placa="ABC-123",
-            tipo="Camioneta",
+            tipo_id="Camioneta",
             capacidad=5,
             estado="Disponible",
             revision_tecnica_vigente=True,

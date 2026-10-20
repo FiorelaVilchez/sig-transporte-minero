@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}SIG — {{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'core:configuracion' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> Volver a Configuración
+        </a>
+        <h2 class="mb-0 text-dark">{{ titulo|capfirst }}</h2>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-premium accent-header">
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        {% for error in form.non_field_errors %}<div class="alert alert-danger small">{{ error }}</div>{% endfor %}
+                        <div class="row g-3">
+                            {% for field in form %}
+                            <div class="{% if field.widget_type == 'checkboxselectmultiple' %}col-12{% else %}col-md-6{% endif %}">
+                                {% if field.widget_type == 'checkbox' %}
+                                    <div class="form-check mt-4">
+                                        {% render_field field class="form-check-input" %}
+                                        <label class="form-check-label fw-semibold small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    </div>
+                                {% elif field.widget_type == 'checkboxselectmultiple' %}
+                                    <label class="form-label fw-semibold font-monospace small">{{ field.label }}</label>
+                                    <div class="border rounded p-3 bg-light"><div class="row g-2">
+                                        {% for cb in field %}
+                                        <div class="col-sm-6 col-md-3"><div class="form-check">{{ cb.tag }}<label class="form-check-label" for="{{ cb.id_for_label }}">{{ cb.choice_label }}</label></div></div>
+                                        {% endfor %}
+                                    </div></div>
+                                {% else %}
+                                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold font-monospace small">{{ field.label }}</label>
+                                    {% if field.widget_type == 'select' %}{% render_field field class="form-select" %}{% else %}{% render_field field class="form-control" %}{% endif %}
+                                {% endif %}
+                                {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:configuracion' %}" class="btn btn-light">Cancelar</a>
+                            <button type="submit" class="btn btn-accent px-4"><i class="bi bi-save-fill me-1"></i> Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

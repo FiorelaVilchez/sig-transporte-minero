@@ -7,11 +7,16 @@ from django.views import View
 from django.db import models
 
 from core.decorators import role_required
+from django.views.decorators.http import require_POST
+from assignments.forms import ChecklistForm, FinalizarForm, GastoForm, IncidenciaForm
 from service_requests.models import SolicitudServicio
 from drivers.models import Conductor
 from trucks.models import Vehiculo
-from assignments.models import Asignacion, Notificacion
-from assignments.services import asignar_automaticamente
+from assignments.models import Asignacion, ChecklistPreoperacional, GastoServicio, Incidencia, Notificacion
+from assignments.services import (
+    asignar_automaticamente, asignacion_vigente, completar_servicio, confirmar_asignacion,
+    iniciar_ruta, registrar_checklist, reportar_incidencia,
+)
 from assignments.validators import validar_asignacion
 
 @login_required
@@ -50,8 +55,11 @@ def solicitudes_pendientes_list(request):
     # Para simplificar en este prototipo, si la solicitud está reprogramada
     # mostramos el mensaje de la última asignación rechazada o un mensaje por defecto.
     for rep in reprogramadas:
+        ultimo_cambio = rep.cambios.filter(valor_nuevo='Reprogramada').order_by('-fecha').first()
         ultima_asig = Asignacion.objects.filter(solicitud=rep).order_by('-created_at').first()
-        if ultima_asig and ultima_asig.observacion:
+        if ultimo_cambio and ultimo_cambio.motivo:
+            rep.motivo_reprogramacion = ultimo_cambio.motivo
+        elif ultima_asig and ultima_asig.observacion:
             rep.motivo_reprogramacion = ultima_asig.observacion
         else:
             rep.motivo_reprogramacion = "Recursos no disponibles (conductores/vehículos ocupados o incompatibles)."
@@ -74,7 +82,7 @@ def asignar_automatica_view(request, solicitud_id):
     Vista que ejecuta el motor de asignación automática.
     """
     solicitud = get_object_or_404(SolicitudServicio, request_id=solicitud_id)
-    resultado = asignar_automaticamente(solicitud)
+    resultado = asignar_automaticamente(solicitud, usuario=request.user)
     
     if resultado['exito']:
         messages.success(request, resultado['mensaje'])
@@ -91,8 +99,9 @@ def asignar_manual_view(request, solicitud_id):
     Formulario y confirmación de asignación manual.
     """
     solicitud = get_object_or_404(SolicitudServicio, request_id=solicitud_id)
-    conductores = Conductor.objects.filter(estado="Disponible").order_by('apellidos', 'nombres')
-    vehiculos = Vehiculo.objects.filter(estado="Disponible").order_by('placa')
+    # Desde la versión 2.0 la disponibilidad se valida por horario (R9), no por estado global.
+    conductores = Conductor.objects.filter(estado__in=["Disponible", "Ocupado"]).order_by('apellidos', 'nombres')
+    vehiculos = Vehiculo.objects.exclude(estado__in=["En mantenimiento", "De baja"]).order_by('tipo__asientos_referencia', 'placa')
 
     if request.method == "POST":
         conductor_id = request.POST.get('conductor')
@@ -103,10 +112,10 @@ def asignar_manual_view(request, solicitud_id):
         vehiculo = get_object_or_404(Vehiculo, truck_id=vehiculo_id)
 
         # Advertencia de discrepancia de tipo de vehículo
-        tipo_discrepancia = (vehiculo.tipo != solicitud.tipo_vehiculo_requerido)
+        tipo_discrepancia = (vehiculo.tipo_id != solicitud.tipo_vehiculo_requerido_id)
 
         # Validar la asignación (sin persistir alertas todavía si no está confirmado)
-        resultado = validar_asignacion(conductor, vehiculo, generar_alertas=confirmado)
+        resultado = validar_asignacion(conductor, vehiculo, solicitud=solicitud, generar_alertas=confirmado)
 
         if resultado['veredicto'] == "Rechazada":
             # Si es rechazada, no se permite confirmar, se vuelve al formulario
@@ -123,42 +132,16 @@ def asignar_manual_view(request, solicitud_id):
             })
 
         if confirmado:
-            # Si ya se confirmó y es Aprobada u Observada
-            obs_texto = ", ".join(resultado.get('observaciones', []))
+            obs_extra = ""
             if tipo_discrepancia:
-                if obs_texto:
-                    obs_texto += ", "
-                obs_texto += f"Vehículo asignado ({vehiculo.tipo}) difiere del requerido ({solicitud.tipo_vehiculo_requerido})"
-
-            asignacion = Asignacion.objects.create(
-                solicitud=solicitud,
-                conductor=conductor,
-                vehiculo=vehiculo,
-                estado_asignacion=resultado['veredicto'],
-                observacion=obs_texto
+                obs_extra = f"Vehículo asignado ({vehiculo.tipo}) difiere del requerido ({solicitud.tipo_vehiculo_requerido})"
+            confirmar_asignacion(
+                solicitud, conductor, vehiculo, resultado,
+                observacion_extra=obs_extra, usuario=request.user, manual=True,
             )
-
-            # Cambiar estados
-            conductor.estado = "Ocupado"
-            conductor.save()
-
-            vehiculo.estado = "En servicio"
-            vehiculo.save()
-
-            solicitud.estado_solicitud = "Asignada"
-            solicitud.save()
-
-            # Notificar conductor
-            mensaje_notif = f"Manual: Nuevo servicio asignado: {solicitud.cliente} el {solicitud.fecha_servicio} a las {solicitud.hora_servicio}. Ruta: {solicitud.origen} -> {solicitud.destino}."
-            Notificacion.objects.create(
-                conductor=conductor,
-                mensaje=mensaje_notif,
-                leida=False
-            )
-
             messages.success(request, f"Asignación manual confirmada con éxito. Veredicto: {resultado['veredicto']}.")
             return redirect('assignments:solicitudes_pendientes')
-        
+
         else:
             # Mostrar la pantalla de confirmación intermedia
             return render(request, 'assignments/asignacion_manual.html', {
@@ -188,22 +171,13 @@ def completar_servicio_view(request, solicitud_id):
         messages.error(request, "Solo se pueden completar servicios en estado 'Asignada'.")
         return redirect('assignments:solicitudes_pendientes')
 
-    # Buscar la asignación activa aprobada/observada
-    asignacion = Asignacion.objects.filter(
-        solicitud=solicitud, 
-        estado_asignacion__in=['Aprobada', 'Observada']
-    ).first()
-
+    asignacion = asignacion_vigente(solicitud)
     if asignacion:
-        if asignacion.conductor:
-            asignacion.conductor.estado = "Disponible"
-            asignacion.conductor.save()
-        if asignacion.vehiculo:
-            asignacion.vehiculo.estado = "Disponible"
-            asignacion.vehiculo.save()
-
-    solicitud.estado_solicitud = "Completada"
-    solicitud.save()
+        km_final = request.POST.get('km_final') if request.method == 'POST' else None
+        completar_servicio(asignacion, km_final=int(km_final) if km_final and km_final.isdigit() else None, usuario=request.user)
+    else:
+        solicitud.estado_solicitud = "Completada"
+        solicitud.save()
 
     messages.success(request, f"Servicio completado. Conductor y vehículo liberados con éxito.")
     return redirect('assignments:solicitudes_pendientes')
@@ -234,12 +208,27 @@ def mis_servicios_conductor(request):
     # Documentos del conductor
     documentos = conductor.documentos.all().order_by('-fecha_vencimiento')
 
+    from assignments.models import ESTADOS_OPERATIVOS_ACTIVOS
+    from assignments.validators import LIMITE_HORAS_SEMANA, horas_programadas_semana
+
+    activas = asignaciones.filter(
+        estado_asignacion__in=['Aprobada', 'Observada'],
+        estado_operativo__in=ESTADOS_OPERATIVOS_ACTIVOS,
+    ).prefetch_related('gastos', 'incidencias').order_by('solicitud__fecha_servicio', 'solicitud__hora_servicio')
+    historial = asignaciones.exclude(pk__in=activas.values('pk'))
+
     context = {
         'conductor': conductor,
-        'asignaciones': asignaciones,
+        'asignaciones': historial,
+        'activas': activas,
         'notificaciones': notificaciones,
         'documentos': documentos,
         'today': datetime.date.today(),
+        'tipos_incidencia': Incidencia.TIPO_CHOICES,
+        'gravedades': Incidencia.GRAVEDAD_CHOICES,
+        'conceptos_gasto': GastoServicio.CONCEPTO_CHOICES,
+        'horas_semana': horas_programadas_semana(conductor, datetime.date.today()),
+        'limite_semana': LIMITE_HORAS_SEMANA,
     }
     return render(request, 'assignments/mis_servicios.html', context)
 
@@ -255,3 +244,157 @@ def marcar_notificacion_leida(request, notificacion_id):
     notificacion.leida = True
     notificacion.save()
     return redirect('assignments:mis_servicios')
+
+
+# ---------------------------------------------------------------------------
+# Versión 2.0: ejecución del servicio desde el portal del conductor (M3 y M4)
+# ---------------------------------------------------------------------------
+
+
+def _asignacion_del_conductor(request, asignacion_id):
+    return get_object_or_404(
+        Asignacion.objects.select_related('solicitud', 'vehiculo', 'conductor'),
+        assignment_id=asignacion_id,
+        conductor=request.user.perfilusuario.conductor,
+    )
+
+
+@login_required
+@role_required('Conductor')
+def checklist_view(request, asignacion_id):
+    asignacion = _asignacion_del_conductor(request, asignacion_id)
+    if asignacion.estado_operativo != 'Programado':
+        messages.error(request, "El checklist solo se registra cuando el servicio está Programado.")
+        return redirect('assignments:mis_servicios')
+    existente = ChecklistPreoperacional.objects.filter(asignacion=asignacion).first()
+    if request.method == 'POST':
+        form = ChecklistForm(request.POST, instance=existente)
+        if form.is_valid():
+            checklist = registrar_checklist(asignacion, form.save(commit=False))
+            if checklist.aprobado:
+                messages.success(request, "Checklist aprobado. El servicio está listo para salir.")
+            else:
+                messages.error(
+                    request,
+                    f"Checklist no aprobado: {checklist.motivo_rechazo}. La unidad no puede salir; "
+                    "se avisó a operaciones. Corrija y vuelva a registrar el checklist.",
+                )
+            return redirect('assignments:mis_servicios')
+    else:
+        form = ChecklistForm(instance=existente, initial={'km_inicial': asignacion.km_inicial})
+    return render(request, 'assignments/checklist.html', {
+        'asignacion': asignacion,
+        'form': form,
+        'criticos': ChecklistPreoperacional.PUNTOS_CRITICOS,
+        'horas_minimas': ChecklistPreoperacional.HORAS_SUENO_MINIMAS,
+    })
+
+
+@login_required
+@role_required('Conductor')
+@require_POST
+def iniciar_ruta_view(request, asignacion_id):
+    asignacion = _asignacion_del_conductor(request, asignacion_id)
+    if asignacion.estado_operativo != 'Listo para salir':
+        messages.error(request, "Primero registre y apruebe el checklist preoperacional.")
+    else:
+        iniciar_ruta(asignacion, request.user)
+        messages.success(request, "Salida registrada. Servicio en ruta.")
+    return redirect('assignments:mis_servicios')
+
+
+@login_required
+@role_required('Conductor')
+@require_POST
+def incidencia_view(request, asignacion_id):
+    asignacion = _asignacion_del_conductor(request, asignacion_id)
+    form = IncidenciaForm(request.POST)
+    if asignacion.estado_operativo not in ('Listo para salir', 'En ruta'):
+        messages.error(request, "Solo se reportan incidencias de servicios listos o en ruta.")
+    elif form.is_valid():
+        incidencia = reportar_incidencia(asignacion, form.save(commit=False), request.user)
+        if incidencia.gravedad == 'Alta':
+            messages.warning(request, "Incidencia grave registrada. Operaciones reasignará el servicio.")
+        else:
+            messages.success(request, "Incidencia registrada. Operaciones fue notificado.")
+    else:
+        messages.error(request, "Complete el tipo y la descripción de la incidencia.")
+    return redirect('assignments:mis_servicios')
+
+
+@login_required
+@role_required('Conductor')
+@require_POST
+def gasto_view(request, asignacion_id):
+    asignacion = _asignacion_del_conductor(request, asignacion_id)
+    form = GastoForm(request.POST)
+    if asignacion.estado_operativo not in ('Listo para salir', 'En ruta', 'Completado'):
+        messages.error(request, "No se pueden registrar gastos en este servicio.")
+    elif form.is_valid():
+        gasto = form.save(commit=False)
+        gasto.asignacion = asignacion
+        gasto.save()
+        messages.success(request, f"Gasto registrado: {gasto.concepto} S/ {gasto.monto}.")
+    else:
+        messages.error(request, "Revise el concepto y el monto del gasto.")
+    return redirect('assignments:mis_servicios')
+
+
+@login_required
+@role_required('Conductor')
+@require_POST
+def finalizar_view(request, asignacion_id):
+    asignacion = _asignacion_del_conductor(request, asignacion_id)
+    form = FinalizarForm(request.POST, km_inicial=asignacion.km_inicial)
+    if asignacion.estado_operativo != 'En ruta':
+        messages.error(request, "Solo se finalizan servicios en ruta.")
+    elif form.is_valid():
+        completar_servicio(asignacion, km_final=form.cleaned_data['km_final'], usuario=request.user)
+        messages.success(request, "Servicio finalizado. Gracias.")
+    else:
+        messages.error(request, " ".join(e for errs in form.errors.values() for e in errs))
+    return redirect('assignments:mis_servicios')
+
+
+@login_required
+@role_required('Administrador de operaciones', 'Supervisor', 'Gerencia')
+def programacion_semanal(request):
+    """Agenda de la semana (M5): servicios por día con conductor, unidad y estado."""
+    from assignments.validators import LIMITE_HORAS_SEMANA, horas_programadas_semana
+
+    try:
+        base = datetime.date.fromisoformat(request.GET.get('semana', ''))
+    except ValueError:
+        base = datetime.date.today()
+    lunes = base - datetime.timedelta(days=base.weekday())
+    dias = [lunes + datetime.timedelta(days=i) for i in range(7)]
+    asignaciones = (
+        Asignacion.objects.filter(
+            solicitud__fecha_servicio__range=(dias[0], dias[-1]),
+            estado_asignacion__in=['Aprobada', 'Observada'],
+        )
+        .exclude(estado_operativo='Cancelado')
+        .select_related('solicitud', 'conductor', 'vehiculo')
+        .order_by('solicitud__hora_servicio')
+    )
+    por_dia = {d: [] for d in dias}
+    for a in asignaciones:
+        por_dia[a.solicitud.fecha_servicio].append(a)
+    sin_asignar = SolicitudServicio.objects.filter(
+        fecha_servicio__range=(dias[0], dias[-1]), estado_solicitud__in=['Pendiente', 'Reprogramada'],
+    ).order_by('fecha_servicio', 'hora_servicio')
+    carga = []
+    for c in Conductor.objects.exclude(estado='De baja').order_by('apellidos'):
+        horas = horas_programadas_semana(c, lunes)
+        carga.append({'conductor': c, 'horas': horas, 'porcentaje': min(100, round(horas * 100 / LIMITE_HORAS_SEMANA))})
+    carga.sort(key=lambda x: -x['horas'])
+    return render(request, 'assignments/programacion.html', {
+        'dias': [(d, por_dia[d]) for d in dias],
+        'lunes': lunes,
+        'anterior': (lunes - datetime.timedelta(days=7)).isoformat(),
+        'siguiente': (lunes + datetime.timedelta(days=7)).isoformat(),
+        'sin_asignar': sin_asignar,
+        'carga': carga,
+        'limite': LIMITE_HORAS_SEMANA,
+        'today': datetime.date.today(),
+    })

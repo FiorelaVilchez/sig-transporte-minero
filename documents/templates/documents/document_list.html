@@ -97,7 +97,7 @@
                                         </td>
                                         <td class="fw-semibold text-secondary">{{ doc.tipo_documento }}</td>
                                         <td class="font-monospace text-secondary small">{{ doc.fecha_emision|date:"d/m/Y" }}</td>
-                                        <td class="font-monospace fw-semibold">{{ doc.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td class="font-monospace fw-semibold">{{ doc.fecha_vencimiento|date:"d/m/Y"|default:"No vence" }}</td>
                                         <td class="text-center">
                                             {% if doc.estado_documento == 'Vigente' %}
                                                 <span class="badge bg-success">{{ doc.estado_documento }}</span>
@@ -105,6 +105,11 @@
                                                 <span class="badge bg-warning text-dark">{{ doc.estado_documento }}</span>
                                             {% else %}
                                                 <span class="badge bg-danger">{{ doc.estado_documento }}</span>
+                                            {% endif %}
+                                            {% if doc.estado_mina == 'Pendiente' or doc.estado_mina == 'Observado' %}
+                                                <span class="badge bg-light text-dark border d-block mt-1" title="Visto bueno de mina">Mina: {{ doc.estado_mina }}</span>
+                                            {% elif doc.estado_mina == 'Aprobado' %}
+                                                <span class="badge bg-light text-success border d-block mt-1" title="Visto bueno de mina">Mina: aprobado</span>
                                             {% endif %}
                                         </td>
                                         <td class="text-end">
@@ -186,7 +191,7 @@
                                         </td>
                                         <td class="fw-semibold text-secondary">{{ doc.tipo_documento }}</td>
                                         <td class="font-monospace text-secondary small">{{ doc.fecha_emision|date:"d/m/Y" }}</td>
-                                        <td class="font-monospace fw-semibold">{{ doc.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td class="font-monospace fw-semibold">{{ doc.fecha_vencimiento|date:"d/m/Y"|default:"No vence" }}</td>
                                         <td class="text-center">
                                             {% if doc.estado_documento == 'Vigente' %}
                                                 <span class="badge bg-success">{{ doc.estado_documento }}</span>
@@ -194,6 +199,11 @@
                                                 <span class="badge bg-warning text-dark">{{ doc.estado_documento }}</span>
                                             {% else %}
                                                 <span class="badge bg-danger">{{ doc.estado_documento }}</span>
+                                            {% endif %}
+                                            {% if doc.estado_mina == 'Pendiente' or doc.estado_mina == 'Observado' %}
+                                                <span class="badge bg-light text-dark border d-block mt-1" title="Visto bueno de mina">Mina: {{ doc.estado_mina }}</span>
+                                            {% elif doc.estado_mina == 'Aprobado' %}
+                                                <span class="badge bg-light text-success border d-block mt-1" title="Visto bueno de mina">Mina: aprobado</span>
                                             {% endif %}
                                         </td>
                                         <td class="text-end">

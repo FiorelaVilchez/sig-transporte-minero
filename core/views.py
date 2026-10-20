@@ -22,6 +22,7 @@ class RoleBasedLoginView(LoginView):
             'Gerencia': 'dashboard:operativo',
             'Supervisor': 'alerts:alerta_list',
             'Conductor': 'assignments:mis_servicios',
+            'Finanzas': 'billing:valorizacion_list',
         }
         url_name = redirect_map.get(rol, 'core:home')
         return reverse_lazy(url_name)

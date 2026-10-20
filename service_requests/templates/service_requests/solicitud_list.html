@@ -76,11 +76,11 @@
                     <tbody>
                         {% for req in page_obj %}
                             <tr>
-                                <td class="font-monospace fw-bold text-secondary">#{{ req.request_id }}</td>
+                                <td class="font-monospace fw-bold"><a href="{% url 'service_requests:solicitud_detail' req.pk %}" class="text-decoration-none">#{{ req.request_id }}</a></td>
                                 <td class="fw-bold">{{ req.cliente }}</td>
                                 <td>
                                     <span class="d-block">{{ req.tipo_servicio }}</span>
-                                    <small class="text-muted">Requerido: {{ req.tipo_vehiculo_requerido }}</small>
+                                    <small class="text-muted">Requerido: {{ req.tipo_vehiculo_requerido }} · {{ req.pasajeros }} pas. · {{ req.duracion_horas }} h</small>
                                 </td>
                                 <td>
                                     <div class="small fw-semibold text-primary"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ req.origen }}</div>
@@ -113,7 +113,10 @@
                                     {% endif %}
                                 </td>
                                 {% if is_admin %}
-                                    <td class="text-end">
+                                    <td class="text-end text-nowrap">
+                                        <a href="{% url 'service_requests:solicitud_detail' req.pk %}" class="btn btn-sm btn-outline-secondary" title="Ver ficha y bitácora">
+                                            <i class="bi bi-journal-text"></i>
+                                        </a>
                                         <a href="{% url 'service_requests:solicitud_update' req.pk %}" class="btn btn-sm btn-outline-primary" title="Editar Solicitud">
                                             <i class="bi bi-pencil-fill"></i> Editar
                                         </a>

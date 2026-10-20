@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-1 fw-bold text-dark">Configuración de Catálogos</h1>
+            <p class="text-muted mb-0">Tipos de vehículo, matriz de requisitos documentales y tarifas por cliente. Los cambios se aplican de inmediato al motor de asignación y a las valorizaciones.</p>
+            <hr class="mt-3">
+        </div>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+
+    {% if puede_operaciones %}
+    <div class="card border-0 shadow-sm mb-4" id="tipos">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-truck me-2"></i>Tipos de vehículo</h5>
+            <a href="{% url 'core:catalogo_nuevo' 'tipos' %}" class="btn btn-sm btn-accent"><i class="bi bi-plus-circle me-1"></i> Nuevo tipo</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light"><tr><th>Tipo</th><th>Asientos ref.</th><th>Experiencia mínima</th><th>Licencia mínima</th><th>Estado</th><th></th></tr></thead>
+                    <tbody>
+                    {% for t in tipos %}
+                        <tr class="{% if not t.activo %}text-muted{% endif %}">
+                            <td class="fw-semibold">{{ t.nombre }}</td>
+                            <td>{{ t.asientos_referencia }}</td>
+                            <td>{{ t.experiencia_minima_anios }} años</td>
+                            <td class="font-monospace">{{ t.categoria_licencia_minima }}</td>
+                            <td>{% if t.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
+                            <td class="text-end"><a href="{% url 'core:catalogo_editar' 'tipos' t.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4" id="requisitos">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-list-check me-2"></i>Matriz de requisitos documentales</h5>
+            <a href="{% url 'core:catalogo_nuevo' 'requisitos' %}" class="btn btn-sm btn-accent"><i class="bi bi-plus-circle me-1"></i> Nuevo requisito</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light"><tr><th>Aplica a</th><th>Documento</th><th>Bloqueante</th><th>Vence</th><th>Visto bueno de mina</th><th>Tipos</th><th>Estado</th><th></th></tr></thead>
+                    <tbody>
+                    {% for r in requisitos %}
+                        <tr class="{% if not r.activo %}text-muted{% endif %}">
+                            <td>{{ r.aplica_a }}</td>
+                            <td class="fw-semibold">{{ r.tipo_documento }}</td>
+                            <td>{% if r.bloqueante %}<span class="badge bg-danger">Sí</span>{% else %}<span class="badge bg-light text-dark border">No</span>{% endif %}</td>
+                            <td>{{ r.vence|yesno:"Sí,No" }}</td>
+                            <td>{{ r.requiere_visto_bueno_mina|yesno:"Sí,No" }}</td>
+                            <td class="small">{% for t in r.tipos_vehiculo.all %}{{ t.nombre }}{% if not forloop.last %}, {% endif %}{% empty %}Todos{% endfor %}</td>
+                            <td>{% if r.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
+                            <td class="text-end"><a href="{% url 'core:catalogo_editar' 'requisitos' r.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4" id="tarifas">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-cash-stack me-2"></i>Tarifas por cliente</h5>
+            <a href="{% url 'core:catalogo_nuevo' 'tarifas' %}" class="btn btn-sm btn-accent"><i class="bi bi-plus-circle me-1"></i> Nueva tarifa</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light"><tr><th>Cliente</th><th>Tipo</th><th>Tarifa base</th><th>Km incluidos</th><th>S/ por km adicional</th><th>Estado</th><th></th></tr></thead>
+                    <tbody>
+                    {% for t in tarifas %}
+                        <tr>
+                            <td class="fw-semibold">{{ t.cliente }}</td>
+                            <td>{{ t.tipo_vehiculo }}</td>
+                            <td>S/ {{ t.tarifa_base }}</td>
+                            <td>{{ t.km_incluidos }}</td>
+                            <td>S/ {{ t.precio_km_adicional }}</td>
+                            <td>{% if t.activo %}<span class="badge bg-success">Activa</span>{% else %}<span class="badge bg-secondary">Inactiva</span>{% endif %}</td>
+                            <td class="text-end"><a href="{% url 'core:catalogo_editar' 'tarifas' t.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i></a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="text-muted text-center py-3">Aún no hay tarifas registradas.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
