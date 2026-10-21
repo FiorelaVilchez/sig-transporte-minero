@@ -356,10 +356,25 @@ def finalizar_view(request, asignacion_id):
     return redirect('assignments:mis_servicios')
 
 
+def _asignaciones_en_rango(inicio, fin):
+    return (
+        Asignacion.objects.filter(
+            solicitud__fecha_servicio__range=(inicio, fin),
+            estado_asignacion__in=['Aprobada', 'Observada'],
+        )
+        .exclude(estado_operativo='Cancelado')
+        .select_related('solicitud', 'conductor', 'vehiculo')
+        .order_by('solicitud__fecha_servicio', 'solicitud__hora_servicio')
+    )
+
+
 @login_required
 @role_required('Administrador de operaciones', 'Supervisor', 'Gerencia')
 def programacion_semanal(request):
-    """Agenda de la semana (M5): servicios por día con conductor, unidad y estado."""
+    """Programación de servicios (M5) en vista semanal o mensual."""
+    if request.GET.get('vista') == 'mes':
+        return _programacion_mensual(request)
+
     from assignments.validators import LIMITE_HORAS_SEMANA, horas_programadas_semana
 
     try:
@@ -368,17 +383,8 @@ def programacion_semanal(request):
         base = datetime.date.today()
     lunes = base - datetime.timedelta(days=base.weekday())
     dias = [lunes + datetime.timedelta(days=i) for i in range(7)]
-    asignaciones = (
-        Asignacion.objects.filter(
-            solicitud__fecha_servicio__range=(dias[0], dias[-1]),
-            estado_asignacion__in=['Aprobada', 'Observada'],
-        )
-        .exclude(estado_operativo='Cancelado')
-        .select_related('solicitud', 'conductor', 'vehiculo')
-        .order_by('solicitud__hora_servicio')
-    )
     por_dia = {d: [] for d in dias}
-    for a in asignaciones:
+    for a in _asignaciones_en_rango(dias[0], dias[-1]):
         por_dia[a.solicitud.fecha_servicio].append(a)
     sin_asignar = SolicitudServicio.objects.filter(
         fecha_servicio__range=(dias[0], dias[-1]), estado_solicitud__in=['Pendiente', 'Reprogramada'],
@@ -389,12 +395,95 @@ def programacion_semanal(request):
         carga.append({'conductor': c, 'horas': horas, 'porcentaje': min(100, round(horas * 100 / LIMITE_HORAS_SEMANA))})
     carga.sort(key=lambda x: -x['horas'])
     return render(request, 'assignments/programacion.html', {
+        'vista': 'semana',
         'dias': [(d, por_dia[d]) for d in dias],
         'lunes': lunes,
+        'domingo': dias[-1],
         'anterior': (lunes - datetime.timedelta(days=7)).isoformat(),
         'siguiente': (lunes + datetime.timedelta(days=7)).isoformat(),
+        'mes_actual': lunes.strftime('%Y-%m'),
         'sin_asignar': sin_asignar,
         'carga': carga,
         'limite': LIMITE_HORAS_SEMANA,
         'today': datetime.date.today(),
+    })
+
+
+def _programacion_mensual(request):
+    """Calendario del mes completo: servicios por día, solicitudes sin asignar y horas por conductor."""
+    import calendar
+
+    hoy = datetime.date.today()
+    try:
+        anio, mes = (int(x) for x in request.GET.get('mes', '').split('-'))
+        primero = datetime.date(anio, mes, 1)
+    except (ValueError, TypeError):
+        primero = hoy.replace(day=1)
+    ultimo = primero.replace(day=calendar.monthrange(primero.year, primero.month)[1])
+    inicio = primero - datetime.timedelta(days=primero.weekday())
+    fin = ultimo + datetime.timedelta(days=6 - ultimo.weekday())
+
+    por_dia = {}
+    for a in _asignaciones_en_rango(inicio, fin):
+        por_dia.setdefault(a.solicitud.fecha_servicio, []).append(a)
+    pendientes_por_dia = {}
+    sin_asignar = SolicitudServicio.objects.filter(
+        fecha_servicio__range=(primero, ultimo), estado_solicitud__in=['Pendiente', 'Reprogramada'],
+    ).order_by('fecha_servicio', 'hora_servicio')
+    for s in sin_asignar:
+        pendientes_por_dia[s.fecha_servicio] = pendientes_por_dia.get(s.fecha_servicio, 0) + 1
+
+    MAX_VISIBLES = 3
+    semanas, fecha = [], inicio
+    while fecha <= fin:
+        semana = []
+        for _ in range(7):
+            servicios = por_dia.get(fecha, [])
+            semana.append({
+                'fecha': fecha,
+                'en_mes': fecha.month == primero.month,
+                'servicios': servicios[:MAX_VISIBLES],
+                'total': len(servicios),
+                'ocultos': max(0, len(servicios) - MAX_VISIBLES),
+                'pendientes': pendientes_por_dia.get(fecha, 0),
+                'lunes': (fecha - datetime.timedelta(days=fecha.weekday())).isoformat(),
+            })
+            fecha += datetime.timedelta(days=1)
+        semanas.append(semana)
+
+    del_mes = [a for f, lista in por_dia.items() if primero <= f <= ultimo for a in lista]
+    horas_conductor = {}
+    for a in del_mes:
+        clave = a.conductor_id
+        if clave not in horas_conductor:
+            horas_conductor[clave] = {'conductor': a.conductor, 'horas': 0, 'servicios': 0}
+        horas_conductor[clave]['horas'] += a.solicitud.duracion_horas or 0
+        horas_conductor[clave]['servicios'] += 1
+    carga = sorted(horas_conductor.values(), key=lambda x: -x['horas'])
+    maximo = max((c['horas'] for c in carga), default=0) or 1
+    for c in carga:
+        c['porcentaje'] = round(c['horas'] * 100 / maximo)
+
+    dias_activos = [d for d in por_dia if primero <= d <= ultimo]
+    dia_pico = max(dias_activos, key=lambda d: len(por_dia[d]), default=None)
+    mes_anterior = (primero - datetime.timedelta(days=1)).replace(day=1)
+    mes_siguiente = ultimo + datetime.timedelta(days=1)
+    return render(request, 'assignments/programacion.html', {
+        'vista': 'mes',
+        'primero': primero,
+        'semanas': semanas,
+        'anterior': mes_anterior.strftime('%Y-%m'),
+        'siguiente': mes_siguiente.strftime('%Y-%m'),
+        'semana_ref': (primero if not (primero <= hoy <= ultimo) else hoy).isoformat(),
+        'resumen': {
+            'servicios': len(del_mes),
+            'completados': sum(1 for a in del_mes if a.estado_operativo == 'Completado'),
+            'por_asignar': sin_asignar.count(),
+            'horas': sum(a.solicitud.duracion_horas or 0 for a in del_mes),
+            'dia_pico': dia_pico,
+            'dia_pico_total': len(por_dia[dia_pico]) if dia_pico else 0,
+        },
+        'sin_asignar': sin_asignar,
+        'carga': carga,
+        'today': hoy,
     })
