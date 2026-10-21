@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SIG — Transporte Minero{% endblock %}</title>
+    <title>{% block title %}{{ empresa_nombre }}{% endblock %}</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-shield-fill text-accent me-2"></i>SIG <span class="accent">—</span> Transporte Minero
+                {{ empresa_nombre }}
             </a>
             <button class="navbar-row navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -71,7 +71,7 @@
                     </li>
                     <li>
                         <a href="{% url 'core:perfil' %}" class="sidebar-link {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
-                            <i class="bi bi-person-circle"></i> Mi Perfil
+                            <i class="bi bi-person-circle"></i> Mi perfil
                         </a>
                     </li>
 
@@ -79,7 +79,7 @@
                     {% if user.perfilusuario.rol == 'Conductor' %}
                     <li>
                         <a href="{% url 'assignments:mis_servicios' %}" class="sidebar-link {% if request.resolver_match.url_name == 'mis_servicios' %}active{% endif %}">
-                            <i class="bi bi-calendar-check"></i> Mis Servicios
+                            <i class="bi bi-calendar-check"></i> Mis servicios
                         </a>
                     </li>
                     {% endif %}
@@ -88,7 +88,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
                         <a href="{% url 'dashboard:operativo' %}" class="sidebar-link {% if request.resolver_match.app_name == 'dashboard' and request.resolver_match.url_name == 'operativo' %}active{% endif %}">
-                            <i class="bi bi-bar-chart-line"></i> Centro de Control
+                            <i class="bi bi-bar-chart-line"></i> Centro de control
                         </a>
                     </li>
                     {% endif %}
@@ -97,12 +97,12 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
                     <li>
                         <a href="{% url 'drivers:conductor_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'drivers' %}active{% endif %}">
-                            <i class="bi bi-people"></i> Registro de Conductores
+                            <i class="bi bi-people"></i> Conductores
                         </a>
                     </li>
                     <li>
                         <a href="{% url 'trucks:vehiculo_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'trucks' %}active{% endif %}">
-                            <i class="bi bi-truck"></i> Registro de Vehículos
+                            <i class="bi bi-truck"></i> Vehículos
                         </a>
                     </li>
                     {% endif %}
@@ -111,7 +111,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
                         <a href="{% url 'service_requests:solicitud_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'service_requests' %}active{% endif %}">
-                            <i class="bi bi-clipboard-check"></i> Registro de Solicitudes
+                            <i class="bi bi-clipboard-check"></i> Solicitudes
                         </a>
                     </li>
                     {% endif %}
@@ -120,7 +120,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
                         <a href="{% url 'assignments:solicitudes_pendientes' %}" class="sidebar-link {% if request.resolver_match.app_name == 'assignments' and request.resolver_match.url_name != 'mis_servicios' and request.resolver_match.url_name != 'programacion' %}active{% endif %}">
-                            <i class="bi bi-cpu"></i> Asignación Automática
+                            <i class="bi bi-cpu"></i> Asignación
                         </a>
                     </li>
                     {% endif %}
@@ -138,7 +138,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
                     <li>
                         <a href="{% url 'documents:document_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'documents' %}active{% endif %}">
-                            <i class="bi bi-file-earmark-medical"></i> Control Documental
+                            <i class="bi bi-file-earmark-medical"></i> Control documental
                         </a>
                     </li>
                     <li>
@@ -153,7 +153,7 @@
                     {% if user.perfilusuario.rol == 'Gerencia' or user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' %}
                     <li>
                         <a href="{% url 'dashboard:reportes' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
-                            <i class="bi bi-graph-up"></i> Reportes Gerenciales
+                            <i class="bi bi-graph-up"></i> Reportes
                         </a>
                     </li>
                     {% endif %}
@@ -171,7 +171,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
                     <li>
                         <a href="{% url 'core:usuario_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'usuario_list' or request.resolver_match.url_name == 'usuario_create' or request.resolver_match.url_name == 'usuario_update' or request.resolver_match.url_name == 'usuario_password' %}active{% endif %}">
-                            <i class="bi bi-person-lock"></i> Usuarios y Accesos
+                            <i class="bi bi-person-lock"></i> Usuarios
                         </a>
                     </li>
                     {% endif %}
