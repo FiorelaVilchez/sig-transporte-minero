@@ -66,12 +66,11 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Solicitud ID</th>
+                                    <th>N.º</th>
                                     <th>Cliente</th>
-                                    <th>Fecha / Hora</th>
-                                    <th>Ruta (Origen -> Destino)</th>
-                                    <th>Tipo de Servicio</th>
-                                    <th>Vehículo Requerido</th>
+                                    <th>Fecha</th>
+                                    <th>Ruta</th>
+                                    <th>Unidad</th>
                                     <th>Prioridad</th>
                                     {% if es_admin %}
                                     <th class="text-center">Acciones</th>
@@ -82,16 +81,18 @@
                                 {% for item in pendientes %}
                                 <tr>
                                     <td><strong>#{{ item.request_id }}</strong></td>
-                                    <td>{{ item.cliente }}</td>
-                                    <td>
+                                    <td class="celda-cliente">
+                                        <div class="fw-semibold">{{ item.cliente }}</div>
+                                        <small class="text-muted">{{ item.tipo_servicio }} · {{ item.pasajeros }} pas.</small>
+                                    </td>
+                                    <td class="text-nowrap">
                                         <div>{{ item.fecha_servicio|date:"d/m/Y" }}</div>
                                         <small class="text-muted">{{ item.hora_servicio|time:"H:i" }}</small>
                                     </td>
                                     <td>
-                                        <div class="text-dark">{{ item.origen }}</div>
-                                        <div class="text-muted small"><i class="bi bi-arrow-right"></i> {{ item.destino }}</div>
+                                        <div class="text-dark text-nowrap">{{ item.origen }}</div>
+                                        <div class="text-muted small text-nowrap"><i class="bi bi-arrow-right"></i> {{ item.destino }}</div>
                                     </td>
-                                    <td>{{ item.tipo_servicio }}</td>
                                     <td>
                                         <span class="badge bg-dark font-monospace"><i class="bi bi-truck me-1"></i>{{ item.tipo_vehiculo_requerido }}</span>
                                     </td>
@@ -108,7 +109,7 @@
                                     <td>
                                         <div class="d-flex justify-content-center gap-2">
                                             <a href="{% url 'assignments:asignar_automatica' item.request_id %}" class="btn btn-sm btn-accent d-flex align-items-center">
-                                                <i class="bi bi-cpu me-1"></i> Auto-Asignar
+                                                <i class="bi bi-cpu me-1"></i> Automática
                                             </a>
                                             <a href="{% url 'assignments:asignar_manual' item.request_id %}" class="btn btn-sm btn-outline-custom d-flex align-items-center">
                                                 <i class="bi bi-person-fill-gear me-1"></i> Manual
@@ -137,10 +138,10 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Solicitud ID</th>
+                                    <th>N.º</th>
                                     <th>Cliente</th>
                                     <th>Fecha / Hora</th>
-                                    <th>Vehículo Requerido</th>
+                                    <th>Unidad</th>
                                     <th>Prioridad</th>
                                     <th>Motivo de Reprogramación</th>
                                     {% if es_admin %}
@@ -221,15 +222,15 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Asignación ID</th>
-                                    <th>Solicitud ID</th>
+                                    <th>Asig.</th>
+                                    <th>Solicitud</th>
                                     <th>Cliente</th>
-                                    <th>Conductor Asignado</th>
-                                    <th>Vehículo Asignado</th>
-                                    <th>Estado Asignación</th>
-                                    <th>Estado Servicio</th>
-                                    <th>Observaciones / Advertencias</th>
-                                    <th>Fecha Asignación</th>
+                                    <th>Conductor</th>
+                                    <th>Vehículo</th>
+                                    <th>Veredicto</th>
+                                    <th>Servicio</th>
+                                    <th>Observaciones</th>
+                                    <th>Fecha</th>
                                     {% if es_admin %}
                                     <th class="text-center">Acción</th>
                                     {% endif %}

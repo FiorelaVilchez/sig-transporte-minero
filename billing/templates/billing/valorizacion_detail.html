@@ -19,7 +19,7 @@
             <div class="card card-premium accent-header">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3">Cálculo</h5>
-                    <table class="table table-sm mb-3">
+                    <table class="table table-sm mb-3 tabla-calculo">
                         <tr><td>Cliente</td><td class="text-end">{{ v.solicitud.cliente }}</td></tr>
                         <tr><td>Servicio</td><td class="text-end">{{ v.solicitud.fecha_servicio|date:"d/m/Y" }} · {{ v.solicitud.origen }} → {{ v.solicitud.destino }}</td></tr>
                         <tr><td>Tipo de unidad</td><td class="text-end">{{ v.solicitud.tipo_vehiculo_requerido }}</td></tr>
@@ -45,11 +45,28 @@
             <div class="card card-premium">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3">Ciclo de cobro</h5>
-                    <ul class="list-unstyled small mb-3">
-                        <li>Enviada: {{ v.fecha_envio|date:"d/m/Y"|default:"—" }}{% if v.dias_sin_conformidad %} ({{ v.dias_sin_conformidad }} días sin conformidad){% endif %}</li>
-                        <li>Conforme: {{ v.fecha_conformidad|date:"d/m/Y"|default:"—" }}</li>
-                        <li>Facturada: {{ v.fecha_factura|date:"d/m/Y"|default:"—" }} {% if v.numero_factura %}· {{ v.numero_factura }}{% endif %}</li>
-                        <li>Pagada: {{ v.fecha_pago|date:"d/m/Y"|default:"—" }}</li>
+                    <ul class="timeline-cobro">
+                        <li class="hecho{% if v.estado == 'Borrador' %} actual{% endif %}">
+                            <span class="marca"></span><div class="etapa">Borrador</div>
+                            <div class="fecha">Generada el {{ v.created_at|date:"d/m/Y" }}</div>
+                        </li>
+                        <li class="{% if v.fecha_envio %}hecho{% endif %}{% if v.estado == 'Enviada' or v.estado == 'Observada' %} actual{% endif %}">
+                            <span class="marca"></span><div class="etapa">Enviada al cliente</div>
+                            <div class="fecha">{{ v.fecha_envio|date:"d/m/Y"|default:"Pendiente" }}{% if v.dias_sin_conformidad %} · {{ v.dias_sin_conformidad }} días sin conformidad{% endif %}</div>
+                            {% if v.estado == 'Observada' %}<span class="badge bg-danger mt-1">Observada por el cliente</span>{% endif %}
+                        </li>
+                        <li class="{% if v.fecha_conformidad %}hecho{% endif %}{% if v.estado == 'Conforme' %} actual{% endif %}">
+                            <span class="marca"></span><div class="etapa">Conforme</div>
+                            <div class="fecha">{{ v.fecha_conformidad|date:"d/m/Y"|default:"Pendiente" }}</div>
+                        </li>
+                        <li class="{% if v.fecha_factura %}hecho{% endif %}{% if v.estado == 'Facturada' %} actual{% endif %}">
+                            <span class="marca"></span><div class="etapa">Facturada</div>
+                            <div class="fecha">{{ v.fecha_factura|date:"d/m/Y"|default:"Pendiente" }}{% if v.numero_factura %} · {{ v.numero_factura }}{% endif %}</div>
+                        </li>
+                        <li class="{% if v.fecha_pago %}hecho{% endif %}">
+                            <span class="marca"></span><div class="etapa">Pagada</div>
+                            <div class="fecha">{{ v.fecha_pago|date:"d/m/Y"|default:"Pendiente" }}</div>
+                        </li>
                     </ul>
                     {% if puede_editar %}
                         {% if v.estado == 'Borrador' or v.estado == 'Observada' %}

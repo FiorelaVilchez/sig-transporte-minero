@@ -178,20 +178,10 @@
                 </ul>
             </div>
             
-            <!-- Quick System Status Mockup -->
-            <div class="px-3 py-2">
-                <div class="card bg-dark text-light border-0 rounded p-2" style="font-size: 0.75rem; background-color: rgba(0, 0, 0, 0.2) !important;">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span>Base:</span>
-                        <span class="badge bg-success font-monospace">SQLite</span>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span>Rol:</span>
-                        <span class="badge bg-info text-dark font-monospace" style="max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            {{ user.perfilusuario.rol }}
-                        </span>
-                    </div>
-                </div>
+            <!-- Estado del sistema -->
+            <div class="sistema-estado mb-2">
+                <div class="fila"><span><span class="punto"></span>Base de datos</span><span class="valor">{{ motor_bd }}</span></div>
+                <div class="fila"><span>Rol</span><span class="valor">{{ user.perfilusuario.rol }}</span></div>
             </div>
         </aside>
         {% endif %}

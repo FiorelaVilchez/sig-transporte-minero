@@ -30,8 +30,21 @@ class RoleBasedLoginView(LoginView):
 
 @login_required
 def home(request):
+    roles = [
+        ('Administrador de operaciones', 'bi-person-fill-gear',
+         'Registra conductores, vehículos y solicitudes, asigna servicios y configura los catálogos.'),
+        ('Supervisor', 'bi-eye-fill',
+         'Controla la documentación, el visto bueno de mina y las alertas de vencimiento.'),
+        ('Gerencia', 'bi-graph-up-arrow',
+         'Consulta los indicadores operativos y los reportes estratégicos en Power BI.'),
+        ('Finanzas', 'bi-receipt',
+         'Gestiona tarifas y el ciclo de cobro de las valorizaciones.'),
+        ('Conductor', 'bi-person-vcard',
+         'Consulta sus servicios, llena el checklist, reporta incidencias y registra gastos.'),
+    ]
     return render(request, 'core/home.html', {
         'today': datetime.date.today(),
+        'roles': roles,
     })
 
 @login_required
