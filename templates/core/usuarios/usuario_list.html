@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuarios y Accesos — SIG Transporte Minero{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="cc-encabezado">
+        <div>
+            <div class="cc-eyebrow">Administración</div>
+            <h1 class="mb-1">Usuarios y accesos</h1>
+            <div class="cc-meta">{{ total_activos }} cuenta{{ total_activos|pluralize }} activa{{ total_activos|pluralize }}. Cada cuenta tiene un rol; las de conductor se vinculan con su registro.</div>
+        </div>
+        <a href="{% url 'core:usuario_create' %}" class="btn btn-accent"><i class="bi bi-person-plus me-1"></i>Nueva cuenta</a>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+
+    {% if sin_vinculo %}
+    <div class="alert alert-warning">
+        <strong>{{ sin_vinculo|length }} cuenta{{ sin_vinculo|pluralize }} de conductor sin vincular.</strong>
+        Estas personas no pueden ver sus servicios hasta que se les asigne su registro:
+        {% for p in sin_vinculo %}<a href="{% url 'core:usuario_update' p.usuario.pk %}">{{ p.usuario.username }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}.
+    </div>
+    {% endif %}
+
+    <div class="cc-panel mb-3">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Buscar</label>
+                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Usuario, nombre o correo">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Rol</label>
+                <select name="rol" class="form-select">
+                    <option value="">Todos los roles</option>
+                    {% for v, l in roles %}<option value="{{ v }}" {% if rol_filtro == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+                    <option value="sin-perfil" {% if rol_filtro == 'sin-perfil' %}selected{% endif %}>Sin perfil asignado</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+                {% if q or rol_filtro %}<a href="{% url 'core:usuario_list' %}" class="btn btn-outline-secondary">Limpiar</a>{% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="cc-panel">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Conductor vinculado</th><th>Último acceso</th><th>Estado</th><th class="text-end">Acciones</th></tr>
+                </thead>
+                <tbody>
+                {% for u in usuarios %}
+                    <tr class="{% if not u.is_active %}text-muted{% endif %}">
+                        <td class="fw-semibold">{{ u.username }}{% if u == request.user %} <span class="badge bg-secondary">Usted</span>{% endif %}</td>
+                        <td>{{ u.get_full_name|default:"—" }}<div class="small text-muted">{{ u.email }}</div></td>
+                        <td>
+                            {% if u.perfilusuario %}<span class="badge bg-primary">{{ u.perfilusuario.rol }}</span>
+                            {% else %}<span class="badge bg-warning">Sin perfil</span>{% endif %}
+                        </td>
+                        <td class="small">
+                            {% if u.perfilusuario.conductor %}
+                                <a href="{% url 'drivers:conductor_detail' u.perfilusuario.conductor.pk %}" class="text-decoration-none">{{ u.perfilusuario.conductor.apellidos }}, {{ u.perfilusuario.conductor.nombres }}</a>
+                            {% elif u.perfilusuario.rol == 'Conductor' %}
+                                <span class="badge bg-danger">Sin vincular</span>
+                            {% else %}<span class="text-muted">No aplica</span>{% endif %}
+                        </td>
+                        <td class="small text-nowrap">{{ u.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td>
+                        <td>{% if u.is_active %}<span class="badge bg-success">Activa</span>{% else %}<span class="badge bg-secondary">Inactiva</span>{% endif %}</td>
+                        <td class="text-end text-nowrap">
+                            <a href="{% url 'core:usuario_update' u.pk %}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'core:usuario_password' u.pk %}" class="btn btn-sm btn-outline-secondary" title="Restablecer contraseña"><i class="bi bi-key"></i></a>
+                            {% if u != request.user %}
+                            <form method="POST" action="{% url 'core:usuario_toggle' u.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="{% if u.is_active %}Desactivar{% else %}Activar{% endif %}">
+                                    <i class="bi {% if u.is_active %}bi-slash-circle{% else %}bi-check-circle{% endif %}"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-muted text-center py-4">No se encontraron cuentas.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if conductores_sin_cuenta %}
+    <div class="cc-panel mt-3">
+        <div class="cc-panel-head">
+            <div><div class="cc-panel-titulo">Conductores sin cuenta</div><div class="cc-panel-sub">Cree su acceso para que vean sus servicios, llenen el checklist y reporten incidencias</div></div>
+        </div>
+        <ul class="cc-lista-riesgo">
+            {% for c in conductores_sin_cuenta %}
+            <li><span>{{ c.apellidos }}, {{ c.nombres }} <small class="text-muted">· DNI {{ c.dni }}</small></span>
+                <a href="{% url 'core:usuario_create' %}?conductor={{ c.pk }}" class="btn btn-sm btn-outline-primary">Crear cuenta</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

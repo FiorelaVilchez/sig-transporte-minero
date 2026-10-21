@@ -81,6 +81,17 @@
                             <span class="text-muted d-block small font-monospace fw-bold">Fecha de Ingreso</span>
                             <span>{{ conductor.fecha_ingreso|date:"d \d\e F \d\e Y" }}</span>
                         </div>
+                        <div class="col-12">
+                            <span class="text-muted d-block small font-monospace fw-bold">Cuenta de acceso</span>
+                            {% if cuenta %}
+                                <span class="fw-semibold">{{ cuenta.usuario.username }}</span>
+                                {% if cuenta.usuario.is_active %}<span class="badge bg-success ms-1">Activa</span>{% else %}<span class="badge bg-secondary ms-1">Inactiva</span>{% endif %}
+                                {% if is_admin %}<a href="{% url 'core:usuario_update' cuenta.usuario.pk %}" class="small ms-2">Gestionar</a>{% endif %}
+                            {% else %}
+                                <span class="text-muted">Sin cuenta</span>
+                                {% if is_admin %}<a href="{% url 'core:usuario_create' %}?conductor={{ conductor.pk }}" class="small ms-2">Crear cuenta</a>{% endif %}
+                            {% endif %}
+                        </div>
                     </div>
 
                     {% if is_admin %}

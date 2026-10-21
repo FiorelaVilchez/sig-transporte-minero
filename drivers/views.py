@@ -53,6 +53,7 @@ def conductor_detail(request, pk):
         'conductor': conductor,
         'documentos': documentos,
         'cumplimiento': cumplimiento_documental(conductor, True),
+        'cuenta': conductor.perfiles.select_related('usuario').first(),
         'is_admin': is_admin,
     })
 

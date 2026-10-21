@@ -393,3 +393,65 @@ class ProgramacionMensualTests(EscenarioV2):
         r = self.client.get(reverse('assignments:programacion'))
         self.assertEqual(r.context['vista'], 'semana')
         self.assertEqual(len(r.context['dias']), 7)
+
+
+class UsuariosYAccesosTests(EscenarioV2):
+    def setUp(self):
+        super().setUp()
+        self.admin = User.objects.create_user(username='jefe', password='x')
+        PerfilUsuario.objects.create(usuario=self.admin, rol='Administrador de operaciones')
+        self.client.force_login(self.admin)
+
+    def test_crear_cuenta_de_conductor_vinculada(self):
+        r = self.client.post(reverse('core:usuario_create'), {
+            'username': 'aquispe', 'first_name': 'Ana', 'last_name': 'Quispe', 'rol': 'Conductor',
+            'conductor': self.conductor.pk, 'is_active': 'on',
+            'password1': 'Clave-Segura-2026', 'password2': 'Clave-Segura-2026',
+        })
+        self.assertEqual(r.status_code, 302)
+        perfil = User.objects.get(username='aquispe').perfilusuario
+        self.assertEqual(perfil.conductor, self.conductor)
+        self.client.force_login(perfil.usuario)
+        self.assertContains(self.client.get(reverse('assignments:mis_servicios')), 'Portal del Conductor')
+
+    def test_rol_conductor_exige_vinculo_y_no_repite_conductor(self):
+        datos = {'username': 'x1', 'first_name': 'X', 'last_name': 'Y', 'rol': 'Conductor',
+                 'password1': 'Clave-Segura-2026', 'password2': 'Clave-Segura-2026'}
+        self.assertEqual(self.client.post(reverse('core:usuario_create'), datos).status_code, 200)
+        otro = User.objects.create_user(username='ocupa')
+        PerfilUsuario.objects.create(usuario=otro, rol='Conductor', conductor=self.conductor)
+        datos['conductor'] = self.conductor.pk
+        r = self.client.post(reverse('core:usuario_create'), datos)
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(User.objects.filter(username='x1').exists())
+
+    def test_vincular_cuenta_existente_y_desactivar(self):
+        u = User.objects.create_user(username='sinvinculo')
+        PerfilUsuario.objects.create(usuario=u, rol='Conductor')
+        self.assertContains(self.client.get(reverse('core:usuario_list')), 'sin vincular')
+        self.client.post(reverse('core:usuario_update', args=[u.pk]), {
+            'username': 'sinvinculo', 'first_name': 'A', 'last_name': 'B', 'rol': 'Conductor',
+            'conductor': self.conductor.pk, 'is_active': 'on',
+        })
+        u.refresh_from_db()
+        self.assertEqual(u.perfilusuario.conductor, self.conductor)
+        self.client.post(reverse('core:usuario_toggle', args=[u.pk]))
+        u.refresh_from_db()
+        self.assertFalse(u.is_active)
+
+    def test_no_puede_desactivarse_a_si_mismo_y_solo_admin_entra(self):
+        self.client.post(reverse('core:usuario_toggle', args=[self.admin.pk]))
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+        sup = User.objects.create_user(username='sup2')
+        PerfilUsuario.objects.create(usuario=sup, rol='Supervisor')
+        self.client.force_login(sup)
+        self.assertEqual(self.client.get(reverse('core:usuario_list')).status_code, 403)
+
+    def test_restablecer_contrasena(self):
+        u = User.objects.create_user(username='olvido', password='vieja')
+        PerfilUsuario.objects.create(usuario=u, rol='Finanzas')
+        self.client.post(reverse('core:usuario_password', args=[u.pk]),
+                         {'password1': 'Nueva-Clave-2026', 'password2': 'Nueva-Clave-2026'})
+        u.refresh_from_db()
+        self.assertTrue(u.check_password('Nueva-Clave-2026'))
