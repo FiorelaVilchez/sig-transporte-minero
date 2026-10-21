@@ -223,6 +223,56 @@ class Command(BaseCommand):
         s = sol(3, 2, (5, 0), 10, *ruta_pb, 'Bus', 42, 'Alta', 'Asignada', km=460)
         asig(s, 1, 9, 'Programado')
 
+        # Actividad del resto del mes, para que la vista mensual muestre una programación realista.
+        self.stdout.write('Actividad del mes...')
+        import calendar
+        import random
+
+        from assignments.services import asignar_automaticamente
+
+        azar = random.Random(2026)
+        inicio_mes = hoy.replace(day=1)
+        fin_mes = hoy.replace(day=calendar.monthrange(hoy.year, hoy.month)[1])
+        ocupados = set(Asignacion.objects.values_list('conductor_id', 'solicitud__fecha_servicio'))
+        horas = [(5, 0), (5, 30), (6, 0), (6, 30), (14, 0), (18, 0)]
+        planes = [('Camioneta', 3), ('Van / Sprinter', 12), ('Minibús', 24), ('Bus', 40)]
+        fecha = inicio_mes
+        while fecha <= fin_mes:
+            dias_desde_hoy = (fecha - hoy).days
+            if -1 <= dias_desde_hoy < 5:
+                fecha += datetime.timedelta(days=1)
+                continue
+            for _ in range(azar.choice([0, 1, 2, 2, 3])):
+                tipo, pax = azar.choice(planes)
+                ruta = azar.choice([ruta_ca, ruta_pb])
+                dur = azar.choice([8, 10])
+                if dias_desde_hoy < 0:
+                    candidatos = [c for c in conductores if c.estado not in ('De baja', 'No apto')
+                                  and tipo in c.especialidad and (c.pk, fecha) not in ocupados]
+                    unidades = [v for v in vehiculos if v.tipo_id == tipo and v.estado != 'De baja']
+                    if not candidatos or not unidades:
+                        continue
+                    c, v = azar.choice(candidatos), azar.choice(unidades)
+                    s = sol(azar.randrange(4), dias_desde_hoy, azar.choice(horas), dur, *ruta, tipo, pax, 'Media',
+                            'Completada', km=380 if ruta == ruta_ca else 460)
+                    km0 = 40000 + azar.randrange(50000)
+                    a = Asignacion.objects.create(
+                        solicitud=s, conductor=c, vehiculo=v, estado_asignacion='Aprobada',
+                        estado_operativo='Completado', km_inicial=km0, km_final=km0 + s.km_estimados + azar.randrange(60),
+                    )
+                    ocupados.add((c.pk, fecha))
+                    val = generar_valorizacion(s)
+                    pasos = ['Enviada', 'Conforme', 'Facturada', 'Pagada'] if dias_desde_hoy < -15 else ['Enviada', 'Conforme', 'Facturada']
+                    for paso in pasos:
+                        cambiar_estado(val, paso, numero_factura=f'F001-{s.pk:06d}')
+                else:
+                    s = sol(azar.randrange(4), dias_desde_hoy, azar.choice(horas), dur, *ruta, tipo, pax, 'Media',
+                            'Pendiente', km=380 if ruta == ruta_ca else 460)
+                    if not asignar_automaticamente(s)['exito']:
+                        s.cambios.all().delete()
+                        s.delete()
+            fecha += datetime.timedelta(days=1)
+
         # Solicitudes por asignar
         sol(0, 2, (7, 0), 8, *ruta_ca, 'Camioneta', 3, 'Alta', 'Pendiente')
         sol(1, 3, (5, 30), 10, *ruta_pb, 'Minibús', 24, 'Media', 'Pendiente', km=460)

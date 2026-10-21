@@ -129,7 +129,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
                         <a href="{% url 'assignments:programacion' %}" class="sidebar-link {% if request.resolver_match.url_name == 'programacion' %}active{% endif %}">
-                            <i class="bi bi-calendar-week"></i> Programación Semanal
+                            <i class="bi bi-calendar-week"></i> Programación
                         </a>
                     </li>
                     {% endif %}

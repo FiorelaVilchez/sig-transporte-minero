@@ -1,77 +1,156 @@
 {% extends 'base.html' %}
 
-{% block title %}Programación Semanal — SIG Transporte Minero{% endblock %}
+{% block title %}Programación de Servicios — SIG Transporte Minero{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="row mb-3">
-        <div class="col d-flex flex-wrap align-items-center gap-3">
-            <div>
-                <h1 class="h3 mb-1 fw-bold text-dark">Programación Semanal</h1>
-                <p class="text-muted mb-0">Semana del {{ lunes|date:"d/m/Y" }}. Los recursos se reservan por horario: un conductor puede tener varios servicios si no se cruzan y descansa 8 horas entre ellos.</p>
+    <!-- Encabezado con selector de vista -->
+    <div class="cc-encabezado">
+        <div>
+            <div class="cc-eyebrow">Programación de servicios</div>
+            {% if vista == 'mes' %}
+                <h1 class="mb-1 text-capitalize">{{ primero|date:"F Y" }}</h1>
+                <div class="cc-meta">Calendario del mes completo. Haga clic en un día para abrir su semana.</div>
+            {% else %}
+                <h1 class="mb-1">Semana del {{ lunes|date:"j \d\e F" }} al {{ domingo|date:"j \d\e F \d\e Y" }}</h1>
+                <div class="cc-meta">Los recursos se reservan por horario: un conductor puede tener varios servicios si no se cruzan y descansa 8 horas entre ellos.</div>
+            {% endif %}
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="vista-toggle" role="group" aria-label="Vista">
+                <a href="?{% if vista == 'mes' %}semana={{ semana_ref }}{% endif %}" class="{% if vista != 'mes' %}activo{% endif %}">Semana</a>
+                <a href="?vista=mes{% if vista != 'mes' %}&mes={{ mes_actual }}{% endif %}" class="{% if vista == 'mes' %}activo{% endif %}">Mes</a>
             </div>
-            <div class="ms-auto btn-group">
-                <a class="btn btn-outline-secondary btn-sm" href="?semana={{ anterior }}"><i class="bi bi-chevron-left"></i> Anterior</a>
-                <a class="btn btn-outline-secondary btn-sm" href="?">Esta semana</a>
-                <a class="btn btn-outline-secondary btn-sm" href="?semana={{ siguiente }}">Siguiente <i class="bi bi-chevron-right"></i></a>
+            <div class="btn-group">
+                {% if vista == 'mes' %}
+                    <a class="btn btn-outline-secondary btn-sm" href="?vista=mes&mes={{ anterior }}" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></a>
+                    <a class="btn btn-outline-secondary btn-sm" href="?vista=mes">Este mes</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="?vista=mes&mes={{ siguiente }}" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></a>
+                {% else %}
+                    <a class="btn btn-outline-secondary btn-sm" href="?semana={{ anterior }}" aria-label="Semana anterior"><i class="bi bi-chevron-left"></i></a>
+                    <a class="btn btn-outline-secondary btn-sm" href="?">Esta semana</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="?semana={{ siguiente }}" aria-label="Semana siguiente"><i class="bi bi-chevron-right"></i></a>
+                {% endif %}
             </div>
         </div>
-        <div class="col-12"><hr class="mt-3"></div>
     </div>
 
-    <div class="row g-3 mb-4">
-        {% for dia, servicios in dias %}
-        <div class="col-md-6 col-xl">
-            <div class="card border-0 shadow-sm h-100 {% if dia == today %}border-top border-3 border-warning{% endif %}">
-                <div class="card-header bg-white py-2">
-                    <strong class="text-capitalize">{{ dia|date:"l" }}</strong> <span class="text-muted small">{{ dia|date:"d/m" }}</span>
-                </div>
-                <div class="card-body p-2">
-                    {% for a in servicios %}
-                    <a href="{% url 'service_requests:solicitud_detail' a.solicitud.pk %}" class="d-block text-decoration-none text-dark border rounded p-2 mb-2 small">
-                        <div class="fw-bold">{{ a.solicitud.hora_servicio|time:"H:i" }} · {{ a.solicitud.duracion_horas }} h</div>
-                        <div>{{ a.solicitud.cliente }}</div>
-                        <div class="text-muted">{{ a.conductor.apellidos }} · <span class="font-monospace">{{ a.vehiculo.placa }}</span></div>
-                        <span class="badge {% if a.estado_operativo == 'Completado' %}bg-success{% elif a.estado_operativo == 'En ruta' %}bg-warning text-dark{% elif a.estado_operativo == 'Con incidencia' %}bg-danger{% else %}bg-primary{% endif %}">{{ a.estado_operativo }}</span>
+    {% if vista == 'mes' %}
+    <!-- Resumen del mes -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Servicios asignados en el mes</div><div class="cc-tile-valor">{{ resumen.servicios }}</div><div class="cc-tile-pie"><span class="cc-dot ok"></span>{{ resumen.completados }} completado{{ resumen.completados|pluralize }}</div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Solicitudes sin asignar</div><div class="cc-tile-valor">{{ resumen.por_asignar }}</div><div class="cc-tile-pie"><span class="cc-dot {% if resumen.por_asignar %}atencion{% else %}ok{% endif %}"></span>{% if resumen.por_asignar %}Pendientes o reprogramadas{% else %}Todo el mes cubierto{% endif %}</div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Horas de servicio programadas</div><div class="cc-tile-valor">{{ resumen.horas }}<span class="cc-tile-de"> h</span></div><div class="cc-tile-pie"><span class="cc-dot neutro"></span>Suma de duraciones estimadas</div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Día de mayor carga</div><div class="cc-tile-valor">{% if resumen.dia_pico %}{{ resumen.dia_pico|date:"d/m" }}{% else %}—{% endif %}</div><div class="cc-tile-pie"><span class="cc-dot neutro"></span>{% if resumen.dia_pico %}{{ resumen.dia_pico_total }} servicio{{ resumen.dia_pico_total|pluralize }}{% else %}Sin servicios en el mes{% endif %}</div></div></div>
+    </div>
+
+    <!-- Calendario -->
+    <div class="cc-panel mb-3 p-0 overflow-hidden">
+        <div class="calendario">
+            <div class="cal-cabecera">
+                <span><span class="d-none d-md-inline">Lunes</span><span class="d-md-none">Lu</span></span><span><span class="d-none d-md-inline">Martes</span><span class="d-md-none">Ma</span></span><span><span class="d-none d-md-inline">Miércoles</span><span class="d-md-none">Mi</span></span><span><span class="d-none d-md-inline">Jueves</span><span class="d-md-none">Ju</span></span><span><span class="d-none d-md-inline">Viernes</span><span class="d-md-none">Vi</span></span><span><span class="d-none d-md-inline">Sábado</span><span class="d-md-none">Sá</span></span><span><span class="d-none d-md-inline">Domingo</span><span class="d-md-none">Do</span></span>
+            </div>
+            {% for semana in semanas %}
+            <div class="cal-semana">
+                {% for d in semana %}
+                <div class="cal-dia {% if not d.en_mes %}fuera{% endif %} {% if d.fecha == today %}hoy{% endif %} {% if d.total %}con-servicios{% endif %}">
+                    <a href="?semana={{ d.lunes }}" class="cal-num" title="Abrir la semana">
+                        <span>{{ d.fecha|date:"j" }}</span>
+                        {% if d.total %}<small>{{ d.total }} serv.</small>{% endif %}
                     </a>
-                    {% empty %}
-                    <p class="text-muted small mb-0 text-center py-2">Sin servicios</p>
+                    {% for a in d.servicios %}
+                    <a href="{% url 'service_requests:solicitud_detail' a.solicitud.pk %}" class="cal-evento {% if a.estado_operativo == 'Completado' %}completado{% elif a.estado_operativo == 'En ruta' %}ruta{% elif a.estado_operativo == 'Con incidencia' %}incidencia{% endif %}"
+                       title="{{ a.solicitud.hora_servicio|time:'H:i' }} · {{ a.solicitud.cliente }} · {{ a.conductor.apellidos }} · {{ a.vehiculo.placa }} ({{ a.estado_operativo }})">
+                        <b>{{ a.solicitud.hora_servicio|time:"H:i" }}</b> {{ a.vehiculo.placa }}
+                    </a>
                     {% endfor %}
+                    {% if d.ocultos %}<a href="?semana={{ d.lunes }}" class="cal-mas">+{{ d.ocultos }} más</a>{% endif %}
+                    {% if d.pendientes %}<span class="cal-pendiente">{{ d.pendientes }} sin asignar</span>{% endif %}
                 </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="cal-leyenda">
+            <span><i class="cc-swatch" style="background:#1e3a5f"></i>Programado</span>
+            <span><i class="cc-swatch" style="background:#f39c12"></i>En ruta</span>
+            <span><i class="cc-swatch" style="background:#15803d"></i>Completado</span>
+            <span><i class="cc-swatch" style="background:#b42318"></i>Con incidencia</span>
+            <span><i class="cc-swatch" style="background:#fff4de;border:1px solid #f6c56b"></i>Solicitud sin asignar</span>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Semana -->
+    <div class="semana-grid mb-3">
+        {% for dia, servicios in dias %}
+        <div class="semana-dia {% if dia == today %}hoy{% endif %}">
+            <div class="semana-dia-cab">
+                <span class="text-capitalize">{{ dia|date:"l" }}</span>
+                <span class="semana-dia-num">{{ dia|date:"d/m" }}</span>
+            </div>
+            <div class="semana-dia-cuerpo">
+                {% for a in servicios %}
+                <a href="{% url 'service_requests:solicitud_detail' a.solicitud.pk %}" class="semana-servicio">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>{{ a.solicitud.hora_servicio|time:"H:i" }}</strong>
+                        <span class="text-muted">{{ a.solicitud.duracion_horas }} h</span>
+                    </div>
+                    <div class="semana-cliente">{{ a.solicitud.cliente }}</div>
+                    <div class="text-muted">{{ a.conductor.apellidos }} · {{ a.vehiculo.placa }}</div>
+                    <span class="badge mt-1 {% if a.estado_operativo == 'Completado' %}bg-success{% elif a.estado_operativo == 'En ruta' %}bg-warning{% elif a.estado_operativo == 'Con incidencia' %}bg-danger{% else %}bg-primary{% endif %}">{{ a.estado_operativo }}</span>
+                </a>
+                {% empty %}
+                <p class="text-muted small mb-0 text-center py-3">Sin servicios</p>
+                {% endfor %}
             </div>
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    <div class="row g-4">
+    <!-- Carga y pendientes -->
+    <div class="row g-3">
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3"><h5 class="mb-0 fw-bold">Carga de horas por conductor</h5></div>
-                <div class="card-body">
-                    {% for item in carga %}
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between small"><span>{{ item.conductor.apellidos }}, {{ item.conductor.nombres }}</span><span class="font-monospace">{{ item.horas }} / {{ limite }} h</span></div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar {% if item.porcentaje >= 90 %}bg-danger{% elif item.porcentaje >= 70 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ item.porcentaje }}%"></div>
-                        </div>
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div>
+                        <div class="cc-panel-titulo">Carga de horas por conductor</div>
+                        <div class="cc-panel-sub">{% if vista == 'mes' %}Horas y servicios asignados en el mes{% else %}Horas de la semana frente al tope de {{ limite }} h{% endif %}</div>
                     </div>
-                    {% endfor %}
                 </div>
+                {% for item in carga %}
+                <div class="cc-fila-barra">
+                    <div class="cc-fila-texto">
+                        <span>{{ item.conductor.apellidos }}, {{ item.conductor.nombres }}</span>
+                        <span class="cc-num">{% if vista == 'mes' %}{{ item.horas }} h<small>{{ item.servicios }} serv.</small>{% else %}{{ item.horas }} / {{ limite }} h{% endif %}</span>
+                    </div>
+                    <div class="cc-track"><div class="cc-fill" style="width: {{ item.porcentaje }}%;{% if vista != 'mes' and item.porcentaje >= 90 %} background:#b42318;{% elif vista != 'mes' and item.porcentaje >= 70 %} background:#d97706;{% endif %}"></div></div>
+                </div>
+                {% empty %}
+                <p class="cc-vacio">Sin horas programadas en este periodo.</p>
+                {% endfor %}
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3"><h5 class="mb-0 fw-bold">Solicitudes de la semana sin asignar</h5></div>
-                <div class="card-body">
-                    {% for s in sin_asignar %}
-                    <div class="d-flex justify-content-between border-bottom py-2 small">
-                        <span><strong>#{{ s.request_id }}</strong> {{ s.cliente }} · {{ s.tipo_vehiculo_requerido }}</span>
-                        <span class="text-muted">{{ s.fecha_servicio|date:"d/m" }} {{ s.hora_servicio|time:"H:i" }} · {{ s.estado_solicitud }}</span>
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div>
+                        <div class="cc-panel-titulo">Solicitudes sin asignar</div>
+                        <div class="cc-panel-sub">Pendientes o reprogramadas {% if vista == 'mes' %}del mes{% else %}de la semana{% endif %}</div>
                     </div>
-                    {% empty %}
-                    <p class="text-muted small mb-0">Todas las solicitudes de la semana están asignadas.</p>
-                    {% endfor %}
+                    <a href="{% url 'assignments:solicitudes_pendientes' %}" class="small">Ir a asignación</a>
                 </div>
+                <ul class="cc-lista-riesgo">
+                    {% for s in sin_asignar %}
+                    <li>
+                        <span><strong>#{{ s.request_id }}</strong> {{ s.cliente }}<br><small class="text-muted">{{ s.tipo_vehiculo_requerido }} · {{ s.pasajeros }} pas.</small></span>
+                        <span class="text-end small text-nowrap">{{ s.fecha_servicio|date:"d/m" }} {{ s.hora_servicio|time:"H:i" }}<br><span class="badge {% if s.estado_solicitud == 'Reprogramada' %}bg-warning{% else %}bg-secondary{% endif %}">{{ s.estado_solicitud }}</span></span>
+                    </li>
+                    {% empty %}
+                    <li class="text-muted">Todas las solicitudes del periodo están asignadas.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
     </div>

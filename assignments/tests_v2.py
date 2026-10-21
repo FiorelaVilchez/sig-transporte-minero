@@ -361,3 +361,35 @@ class FichaSolicitudTests(EscenarioV2):
         self.assertContains(r, ', Rocío')
         self.assertContains(r, 'Finanzas')
         self.assertContains(r, 'Base de datos')
+
+
+class ProgramacionMensualTests(EscenarioV2):
+    def setUp(self):
+        super().setUp()
+        u = User.objects.create_user(username='sup', password='x')
+        PerfilUsuario.objects.create(usuario=u, rol='Supervisor')
+        self.client.force_login(u)
+
+    def test_vista_mensual_muestra_el_mes_y_los_servicios(self):
+        asignar_automaticamente(self.solicitud)
+        mes = self.solicitud.fecha_servicio.strftime('%Y-%m')
+        r = self.client.get(reverse('assignments:programacion'), {'vista': 'mes', 'mes': mes})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context['vista'], 'mes')
+        self.assertEqual(r.context['resumen']['servicios'], 1)
+        dias = [d for semana in r.context['semanas'] for d in semana]
+        self.assertEqual(len(dias) % 7, 0)
+        self.assertEqual(dias[0]['fecha'].weekday(), 0)
+        dia = next(d for d in dias if d['fecha'] == self.solicitud.fecha_servicio)
+        self.assertEqual(dia['total'], 1)
+        self.assertContains(r, 'TST-100')
+
+    def test_mes_invalido_usa_el_mes_actual(self):
+        r = self.client.get(reverse('assignments:programacion'), {'vista': 'mes', 'mes': 'xx'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context['primero'], HOY.replace(day=1))
+
+    def test_vista_semanal_sigue_disponible(self):
+        r = self.client.get(reverse('assignments:programacion'))
+        self.assertEqual(r.context['vista'], 'semana')
+        self.assertEqual(len(r.context['dias']), 7)
