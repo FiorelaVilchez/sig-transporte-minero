@@ -340,3 +340,24 @@ class VistasV2Tests(EscenarioV2):
             'vehiculo': self.vehiculo.pk, 'tipo_documento': 'Tarjeta de propiedad', 'fecha_emision': HOY.isoformat(),
         })
         self.assertEqual(r.status_code, 302)
+
+
+class FichaSolicitudTests(EscenarioV2):
+    def test_ficha_muestra_cambios_registrados_por_el_sistema(self):
+        """Un cambio sin usuario (por ejemplo, la asignación automática) no debe romper la ficha."""
+        CambioSolicitud.objects.create(solicitud=self.solicitud, campo='registro', valor_nuevo='Pendiente')
+        u = User.objects.create_user(username='adm', password='x')
+        PerfilUsuario.objects.create(usuario=u, rol='Administrador de operaciones')
+        self.client.force_login(u)
+        r = self.client.get(reverse('service_requests:solicitud_detail', args=[self.solicitud.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Sistema')
+
+    def test_portada_muestra_los_cinco_roles(self):
+        u = User.objects.create_user(username='fin2', password='x', first_name='Rocío')
+        PerfilUsuario.objects.create(usuario=u, rol='Finanzas')
+        self.client.force_login(u)
+        r = self.client.get(reverse('core:home'))
+        self.assertContains(r, 'Hola, Rocío')
+        self.assertContains(r, 'Finanzas')
+        self.assertContains(r, 'Base de datos')

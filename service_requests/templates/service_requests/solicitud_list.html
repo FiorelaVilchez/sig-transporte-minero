@@ -77,14 +77,18 @@
                         {% for req in page_obj %}
                             <tr>
                                 <td class="font-monospace fw-bold"><a href="{% url 'service_requests:solicitud_detail' req.pk %}" class="text-decoration-none">#{{ req.request_id }}</a></td>
-                                <td class="fw-bold">{{ req.cliente }}</td>
-                                <td>
-                                    <span class="d-block">{{ req.tipo_servicio }}</span>
-                                    <small class="text-muted">Requerido: {{ req.tipo_vehiculo_requerido }} · {{ req.pasajeros }} pas. · {{ req.duracion_horas }} h</small>
+                                <td class="fw-semibold celda-cliente">{{ req.cliente }}</td>
+                                <td class="celda-servicio">
+                                    <span class="d-block text-nowrap">{{ req.tipo_servicio }}</span>
+                                    <div class="metas">
+                                        <span class="chip-meta"><i class="bi bi-truck"></i>{{ req.tipo_vehiculo_requerido }}</span>
+                                        <span class="chip-meta"><i class="bi bi-people"></i>{{ req.pasajeros }} pas.</span>
+                                        <span class="chip-meta"><i class="bi bi-clock"></i>{{ req.duracion_horas }} h</span>
+                                    </div>
                                 </td>
                                 <td>
-                                    <div class="small fw-semibold text-primary"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ req.origen }}</div>
-                                    <div class="small text-success"><i class="bi bi-flag-fill text-success me-1"></i>{{ req.destino }}</div>
+                                    <div class="small fw-semibold text-dark text-nowrap"><i class="bi bi-geo-alt text-muted me-1"></i>{{ req.origen }}</div>
+                                    <div class="small text-muted text-nowrap"><i class="bi bi-flag me-1"></i>{{ req.destino }}</div>
                                 </td>
                                 <td>
                                     <div class="font-monospace fw-semibold">{{ req.fecha_servicio|date:"d/m/Y" }}</div>

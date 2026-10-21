@@ -220,23 +220,36 @@
     const vehiculosLabels = {{ vehiculos_labels|safe }};
     const vehiculosValues = {{ vehiculos_values|safe }};
 
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.color = '#64748b';
+    Chart.defaults.plugins.tooltip.backgroundColor = '#111c24';
+    const coloresEstado = {
+        'Pendiente': '#94a3b8', 'Asignada': '#1e3a5f', 'Reprogramada': '#f39c12',
+        'Completada': '#22a06b', 'Cancelada': '#e5484d'
+    };
+    const ejesBarras = {
+        x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f6' }, border: { display: false } },
+        y: { ticks: { autoSkip: false }, grid: { display: false }, border: { display: false } }
+    };
+
     new Chart(document.getElementById('chartSolicitudes'), {
         type: 'doughnut',
         data: {
             labels: solicitudesLabels,
             datasets: [{
                 data: solicitudesValues,
-                backgroundColor: [
-                    '#ffc107', '#0d6efd', '#6f42c1', '#198754', '#dc3545'
-                ],
-                borderWidth: 1
+                backgroundColor: solicitudesLabels.map(e => coloresEstado[e] || '#cbd5e1'),
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '62%',
             plugins: {
-                legend: { position: 'bottom' }
+                legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 14 } }
             }
         }
     });
@@ -248,8 +261,9 @@
             datasets: [{
                 label: 'Asignaciones',
                 data: conductoresValues,
-                backgroundColor: '#0d6efd',
-                borderRadius: 4
+                backgroundColor: '#1e3a5f',
+                borderRadius: 6,
+                maxBarThickness: 16
             }]
         },
         options: {
@@ -257,7 +271,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+            scales: ejesBarras
         }
     });
 
@@ -268,8 +282,9 @@
             datasets: [{
                 label: 'Asignaciones',
                 data: vehiculosValues,
-                backgroundColor: '#198754',
-                borderRadius: 4
+                backgroundColor: '#f39c12',
+                borderRadius: 6,
+                maxBarThickness: 16
             }]
         },
         options: {
@@ -277,7 +292,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+            scales: ejesBarras
         }
     });
 </script>

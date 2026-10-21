@@ -130,8 +130,8 @@
                                 {% for c in cambios %}
                                 <tr>
                                     <td class="font-monospace small text-nowrap">{{ c.fecha|date:"d/m/Y H:i" }}</td>
-                                    <td class="small">{{ c.usuario.get_full_name|default:c.usuario.username|default:"Sistema" }}</td>
-                                    <td class="small fw-semibold">{{ c.campo }}</td>
+                                    <td class="small">{% if c.usuario %}{{ c.usuario.get_full_name|default:c.usuario.username }}{% else %}<span class="text-muted">Sistema</span>{% endif %}</td>
+                                    <td class="small fw-semibold">{{ c.campo|capfirst }}</td>
                                     <td class="small text-muted">{{ c.valor_anterior|default:"—" }}</td>
                                     <td class="small">{{ c.valor_nuevo|default:"—" }}</td>
                                     <td class="small">{{ c.motivo|default:"—" }}</td>

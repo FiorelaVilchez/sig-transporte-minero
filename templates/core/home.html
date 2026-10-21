@@ -3,44 +3,46 @@
 {% block title %}Inicio — SIG Transporte Minero{% endblock %}
 
 {% block content %}
+{% with rol=user.perfilusuario.rol %}
 <div class="container-fluid p-0">
-    <!-- Welcome Header -->
+    <!-- Encabezado -->
     <div class="row mb-4">
         <div class="col">
-            <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div>
-                    <h1 class="h3 mb-1 fw-bold text-dark">Panel de Control General</h1>
-                    <p class="text-muted mb-0">Bienvenido al Sistema de Información Gerencial para la Gestión y Asignación de Recursos.</p>
+                    <h1 class="h3 mb-1 fw-bold text-dark">Hola, {{ user.first_name|default:user.username }}</h1>
+                    <p class="text-muted mb-0">Sistema de Información Gerencial para la Gestión y Asignación de Recursos.</p>
                 </div>
-                <div class="text-end">
-                    <span class="badge bg-secondary px-3 py-2 font-monospace">{{ today|date:"d F Y" }}</span>
-                </div>
+                <span class="badge bg-secondary px-3 py-2"><i class="bi bi-calendar3 me-1"></i>{{ today|date:"l, d \d\e F \d\e Y" }}</span>
             </div>
             <hr class="mt-3 mb-2">
         </div>
     </div>
 
-    <!-- Main Project Context Card -->
+    <!-- Contexto -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card card-premium accent-header shadow-sm">
+            <div class="card card-premium accent-header">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h4 class="card-title mb-3">
+                        <div class="col-md-9">
+                            <h4 class="card-title mb-2">
                                 <i class="bi bi-info-circle-fill text-accent me-2"></i>Contexto Organizacional
                             </h4>
-                            <p class="card-text fs-5 text-dark leading-relaxed">
-                                Este sistema automatiza la programación de servicios, asignación de conductores y vehículos, y el control documental de licencias, revisiones técnicas y seguros en nuestra empresa de transporte minero. El objetivo es mitigar asignaciones ineficientes, documentos vencidos y demoras operativas.
+                            <p class="card-text text-secondary mb-3" style="line-height: 1.7;">
+                                Este sistema automatiza la programación de servicios, la asignación de conductores y vehículos, el control documental
+                                de licencias, revisiones técnicas y seguros, la ejecución de cada servicio y su valorización. El objetivo es evitar
+                                asignaciones ineficientes, documentos vencidos y demoras operativas o de cobro.
                             </p>
-                            <div class="mt-4">
-                                <span class="badge bg-dark me-2 py-2 px-3"><i class="bi bi-shield-fill-check text-accent me-1"></i> Fase 1: Scaffolding</span>
-                                <span class="badge bg-dark me-2 py-2 px-3"><i class="bi bi-layers-half text-accent me-1"></i> Arquitectura 3 Capas</span>
-                                <span class="badge bg-dark py-2 px-3"><i class="bi bi-bootstrap-fill text-accent me-1"></i> Bootstrap 5</span>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-light text-dark"><i class="bi bi-cpu text-accent me-1"></i>Asignación con reglas R1 a R10</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-file-earmark-check text-accent me-1"></i>Matriz de requisitos documentales</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-clipboard-check text-accent me-1"></i>Checklist e incidencias</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-receipt text-accent me-1"></i>Valorizaciones y cobranza</span>
                             </div>
                         </div>
-                        <div class="col-md-4 text-center d-none d-md-block">
-                            <i class="bi bi-cone-striped text-accent" style="font-size: 8rem; opacity: 0.85;"></i>
+                        <div class="col-md-3 text-center d-none d-md-block">
+                            <i class="bi bi-cone-striped text-accent" style="font-size: 5.5rem; opacity: 0.85;"></i>
                         </div>
                     </div>
                 </div>
@@ -48,59 +50,63 @@
         </div>
     </div>
 
-    <!-- Grid of System Roles Preview -->
-    <div class="row mb-4">
+    <!-- Accesos rápidos según el rol -->
+    <div class="row g-3 mb-4">
+        <div class="col-12"><h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge-fill text-accent me-2"></i>Accesos rápidos</h5></div>
+        {% if rol == 'Administrador de operaciones' %}
+            {% url 'assignments:solicitudes_pendientes' as u1 %}{% url 'service_requests:solicitud_create' as u2 %}{% url 'assignments:programacion' as u3 %}{% url 'alerts:alerta_list' as u4 %}
+        {% elif rol == 'Supervisor' %}
+            {% url 'documents:document_list' as u1 %}{% url 'alerts:alerta_list' as u2 %}{% url 'assignments:programacion' as u3 %}{% url 'drivers:conductor_list' as u4 %}
+        {% elif rol == 'Gerencia' %}
+            {% url 'dashboard:operativo' as u1 %}{% url 'dashboard:reportes' as u2 %}{% url 'assignments:programacion' as u3 %}{% url 'billing:valorizacion_list' as u4 %}
+        {% elif rol == 'Finanzas' %}
+            {% url 'billing:valorizacion_list' as u1 %}{% url 'core:configuracion' as u2 %}
+        {% elif rol == 'Conductor' %}
+            {% url 'assignments:mis_servicios' as u1 %}{% url 'core:perfil' as u2 %}
+        {% endif %}
+
+        {% if rol == 'Administrador de operaciones' %}
+            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-cpu"></i></span><div><div class="fw-semibold">Asignar servicios</div><div class="small text-muted">Solicitudes pendientes y reprogramadas</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-plus-circle"></i></span><div><div class="fw-semibold">Nueva solicitud</div><div class="small text-muted">Registrar un pedido del cliente</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u3 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-calendar-week"></i></span><div><div class="fw-semibold">Programación semanal</div><div class="small text-muted">Servicios por día y carga de horas</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u4 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-exclamation-triangle"></i></span><div><div class="fw-semibold">Alertas activas</div><div class="small text-muted">Documentos, checklist e incidencias</div></div></div></a></div>
+        {% elif rol == 'Supervisor' %}
+            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-file-earmark-medical"></i></span><div><div class="fw-semibold">Control documental</div><div class="small text-muted">Vigencias y visto bueno de mina</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-exclamation-triangle"></i></span><div><div class="fw-semibold">Alertas activas</div><div class="small text-muted">Riesgos por atender</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u3 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-calendar-week"></i></span><div><div class="fw-semibold">Programación semanal</div><div class="small text-muted">Servicios por día</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u4 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-people"></i></span><div><div class="fw-semibold">Conductores</div><div class="small text-muted">Fichas y habilitaciones</div></div></div></a></div>
+        {% elif rol == 'Gerencia' %}
+            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-speedometer2"></i></span><div><div class="fw-semibold">Dashboard operativo</div><div class="small text-muted">Indicadores del mes</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-graph-up"></i></span><div><div class="fw-semibold">Reportes gerenciales</div><div class="small text-muted">Archivos para Power BI</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u3 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-calendar-week"></i></span><div><div class="fw-semibold">Programación semanal</div><div class="small text-muted">Servicios por día</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u4 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-receipt"></i></span><div><div class="fw-semibold">Valorizaciones</div><div class="small text-muted">Montos por cobrar</div></div></div></a></div>
+        {% elif rol == 'Finanzas' %}
+            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-receipt"></i></span><div><div class="fw-semibold">Valorizaciones</div><div class="small text-muted">Ciclo de cobro por servicio</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}#tarifas" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-cash-stack"></i></span><div><div class="fw-semibold">Tarifas</div><div class="small text-muted">Precios por cliente y tipo</div></div></div></a></div>
+        {% elif rol == 'Conductor' %}
+            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-signpost-split"></i></span><div><div class="fw-semibold">Mis servicios</div><div class="small text-muted">Checklist, ruta y gastos</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-person-circle"></i></span><div><div class="fw-semibold">Mi perfil</div><div class="small text-muted">Datos de la cuenta</div></div></div></a></div>
+        {% endif %}
+    </div>
+
+    <!-- Roles del sistema -->
+    <div class="row g-3 mb-4">
         <div class="col-12">
-            <h5 class="fw-bold mb-3"><i class="bi bi-people-fill text-dark me-2"></i>Roles Definidos del Sistema</h5>
+            <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-accent me-2"></i>Roles definidos del sistema</h5>
         </div>
-        
-        <div class="col-md-6 col-lg-3 mb-3">
-            <div class="card h-100 border-0 shadow-sm p-3" style="border-top: 4px solid #34495e !important;">
+        {% for nombre, icono, descripcion in roles %}
+        <div class="col-sm-6 col-lg">
+            <div class="card h-100 border-0 shadow-sm p-3 {% if nombre == rol %}border-top border-3 border-warning{% endif %}">
                 <div class="d-flex align-items-center mb-2">
-                    <div class="bg-light p-2 rounded text-dark me-3">
-                        <i class="bi bi-person-fill-gear fs-4"></i>
-                    </div>
-                    <h6 class="mb-0 fw-bold">Admin. de Operaciones</h6>
+                    <div class="bg-light p-2 rounded me-3 text-secondary"><i class="bi {{ icono }} fs-5"></i></div>
+                    <h6 class="mb-0 fw-bold">{{ nombre }}</h6>
                 </div>
-                <p class="card-text text-muted small">Registra conductores, vehículos, solicitudes de servicio y realiza asignaciones.</p>
+                <p class="card-text text-muted small mb-0">{{ descripcion }}</p>
+                {% if nombre == rol %}<span class="badge bg-warning align-self-start mt-2">Su rol</span>{% endif %}
             </div>
         </div>
-
-        <div class="col-md-6 col-lg-3 mb-3">
-            <div class="card h-100 border-0 shadow-sm p-3" style="border-top: 4px solid #f39c12 !important;">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-light p-2 rounded text-warning me-3">
-                        <i class="bi bi-eye-fill fs-4"></i>
-                    </div>
-                    <h6 class="mb-0 fw-bold">Supervisor</h6>
-                </div>
-                <p class="card-text text-muted small">Controla documentación, verifica disponibilidad y recibe alertas de vencimientos.</p>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3 mb-3">
-            <div class="card h-100 border-0 shadow-sm p-3" style="border-top: 4px solid #2980b9 !important;">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-light p-2 rounded text-primary me-3">
-                        <i class="bi bi-graph-up-arrow fs-4"></i>
-                    </div>
-                    <h6 class="mb-0 fw-bold">Gerencia</h6>
-                </div>
-                <p class="card-text text-muted small">Consulta KPIs operacionales y reportes estratégicos mediante la integración de Power BI.</p>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3 mb-3">
-            <div class="card h-100 border-0 shadow-sm p-3" style="border-top: 4px solid #27ae60 !important;">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-light p-2 rounded text-success me-3">
-                        <i class="bi bi-person-video2 fs-4"></i>
-                    </div>
-                    <h6 class="mb-0 fw-bold">Conductor</h6>
-                </div>
-                <p class="card-text text-muted small">Consulta su programación de servicios asignados y el estado de sus documentos pendientes.</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
+{% endwith %}
 {% endblock %}
