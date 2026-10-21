@@ -455,3 +455,17 @@ class UsuariosYAccesosTests(EscenarioV2):
                          {'password1': 'Nueva-Clave-2026', 'password2': 'Nueva-Clave-2026'})
         u.refresh_from_db()
         self.assertTrue(u.check_password('Nueva-Clave-2026'))
+
+
+class SeedUsersTests(TestCase):
+    def test_seed_users_se_puede_ejecutar_varias_veces_con_reportes_subidos(self):
+        import io
+
+        from django.core.management import call_command
+        from dashboard.models import ReporteGerencial
+
+        call_command('seed_users', stdout=io.StringIO())
+        ReporteGerencial.objects.create(subido_por=User.objects.get(username='gerencia1'), descripcion='Prueba')
+        call_command('seed_users', stdout=io.StringIO())
+        self.assertTrue(User.objects.get(username='gerencia1').check_password('Gerencia2026*'))
+        self.assertEqual(User.objects.filter(username='gerencia1').count(), 1)

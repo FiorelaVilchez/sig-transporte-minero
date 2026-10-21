@@ -61,27 +61,28 @@ class Command(BaseCommand):
             }
         ]
 
-        self.stdout.write('Clearing existing test users and profiles...')
-        # Eliminar usuarios previos
-        usernames = [u['username'] for u in users_data]
-        User.objects.filter(username__in=usernames).delete()
-
+        # Las cuentas se actualizan en lugar de borrarse: pueden tener registros asociados
+        # (por ejemplo, reportes gerenciales subidos) que impiden eliminarlas.
         for u in users_data:
-            self.stdout.write(f"Creating user {u['username']}...")
-            user = User.objects.create_user(
-                username=u['username'],
-                first_name=u['first_name'],
-                last_name=u['last_name'],
-                email=u['email'],
-                password=u['password']
-            )
-            
+            user, creado = User.objects.get_or_create(username=u['username'])
+            user.first_name = u['first_name']
+            user.last_name = u['last_name']
+            user.email = u['email']
+            user.is_active = True
+            user.set_password(u['password'])
+            user.save()
+            self.stdout.write(f"{'Creando' if creado else 'Actualizando'} usuario {u['username']}...")
+
+            perfil = PerfilUsuario.objects.filter(usuario=user).first()
+
             # Buscar conductor si corresponde
             conductor = None
             if u['conductor_license']:
                 conductor = Conductor.objects.filter(licencia=u['conductor_license']).first()
+                if conductor is None and perfil and perfil.conductor_id:
+                    conductor = perfil.conductor
                 if conductor is None:
-                    vinculados = PerfilUsuario.objects.filter(conductor__isnull=False).values('conductor_id')
+                    vinculados = PerfilUsuario.objects.filter(conductor__isnull=False).exclude(usuario=user).values('conductor_id')
                     conductor = (Conductor.objects.exclude(estado__in=['De baja', 'No apto'])
                                  .exclude(pk__in=vinculados).order_by('apellidos').first())
                     if conductor:
@@ -95,12 +96,9 @@ class Command(BaseCommand):
                             "Ejecute 'python manage.py seed_data' y luego este comando de nuevo."
                         ))
 
-            # Crear PerfilUsuario
-            PerfilUsuario.objects.create(
+            PerfilUsuario.objects.update_or_create(
                 usuario=user,
-                rol=u['rol'],
-                conductor=conductor,
-                telefono=u['telefono']
+                defaults={'rol': u['rol'], 'conductor': conductor, 'telefono': u['telefono']},
             )
-        
+
         self.stdout.write(self.style.SUCCESS('Successfully seeded all test users and profiles!'))
