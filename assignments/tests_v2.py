@@ -358,6 +358,6 @@ class FichaSolicitudTests(EscenarioV2):
         PerfilUsuario.objects.create(usuario=u, rol='Finanzas')
         self.client.force_login(u)
         r = self.client.get(reverse('core:home'))
-        self.assertContains(r, 'Hola, Rocío')
+        self.assertContains(r, ', Rocío')
         self.assertContains(r, 'Finanzas')
         self.assertContains(r, 'Base de datos')

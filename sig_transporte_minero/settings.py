@@ -169,3 +169,7 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+
+
+# Nombre de la empresa que se muestra en el centro de control y la portada.
+EMPRESA_NOMBRE = config('EMPRESA_NOMBRE', default='Transportes Kallpa Andina S.A.C.')

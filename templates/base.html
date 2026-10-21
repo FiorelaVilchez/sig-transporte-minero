@@ -88,7 +88,7 @@
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Supervisor' or user.perfilusuario.rol == 'Gerencia' %}
                     <li>
                         <a href="{% url 'dashboard:operativo' %}" class="sidebar-link {% if request.resolver_match.app_name == 'dashboard' and request.resolver_match.url_name == 'operativo' %}active{% endif %}">
-                            <i class="bi bi-speedometer2"></i> Dashboard Operativo
+                            <i class="bi bi-bar-chart-line"></i> Centro de Control
                         </a>
                     </li>
                     {% endif %}

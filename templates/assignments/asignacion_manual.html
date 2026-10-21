@@ -16,7 +16,7 @@
     <!-- Error Alert block -->
     {% if error_validacion %}
     <div class="alert alert-danger" role="alert">
-        <h5 class="alert-heading fw-bold"><i class="bi bi-x-octagon-fill me-2"></i>Asignación Rechazada por Reglas de Negocio</h5>
+        <h5 class="alert-heading fw-bold">Asignación Rechazada por Reglas de Negocio</h5>
         <p class="mb-2">La combinación seleccionada no puede registrarse debido a los siguientes bloqueos:</p>
         <ul class="mb-0 font-monospace" style="font-size: 0.9rem;">
             {% for bloqueo in resultado.bloqueos %}
@@ -31,7 +31,7 @@
         <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-dark text-white py-3">
-                    <h5 class="card-title text-white mb-0"><i class="bi bi-clipboard-check me-2"></i>Detalle de Solicitud</h5>
+                    <h5 class="card-title text-white mb-0">Detalle de Solicitud</h5>
                 </div>
                 <div class="card-body">
                     <h6 class="fw-bold mb-1">Cliente:</h6>
@@ -75,7 +75,7 @@
             <!-- STEP 2: CONFIRMATION STEP -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-warning text-dark py-3">
-                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-shield-exclamation me-2"></i>Confirmación de Asignación</h5>
+                    <h5 class="card-title text-dark mb-0 fw-bold">Confirmación de Asignación</h5>
                 </div>
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3">Resultados del Diagnóstico de Reglas de Negocio</h5>
@@ -108,7 +108,7 @@
 
                     {% if resultado.observaciones %}
                     <div class="mb-4">
-                        <h6 class="fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Advertencias Registradas (R3):</h6>
+                        <h6 class="fw-bold text-warning">Advertencias Registradas (R3):</h6>
                         <ul class="font-monospace text-muted small">
                             {% for obs in resultado.observaciones %}
                                 <li>{{ obs }}</li>
@@ -148,7 +148,7 @@
             <!-- STEP 1: SELECTION STEP -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title text-dark mb-0 fw-bold"><i class="bi bi-gear-fill me-2"></i>Selección de Recursos</h5>
+                    <h5 class="card-title text-dark mb-0 fw-bold">Selección de Recursos</h5>
                 </div>
                 <div class="card-body p-4">
                     <form method="POST">
