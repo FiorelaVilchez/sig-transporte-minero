@@ -84,9 +84,8 @@
                                 </div>
                             </div>
                         {% else %}
-                            <div class="alert alert-danger" role="alert">
-                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                                Error: Tu usuario tiene el rol de Conductor pero no tiene un registro de Conductor vinculado en la base de datos. Contacta al Administrador.
+                            <div class="alert alert-warning" role="alert">
+                                Su cuenta tiene el rol de Conductor, pero todavía no está vinculada a su registro de conductor. El Administrador de operaciones puede vincularla en <strong>Usuarios y accesos</strong>.
                             </div>
                         {% endif %}
                     {% endif %}

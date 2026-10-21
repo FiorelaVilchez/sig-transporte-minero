@@ -79,10 +79,21 @@ class Command(BaseCommand):
             # Buscar conductor si corresponde
             conductor = None
             if u['conductor_license']:
-                try:
-                    conductor = Conductor.objects.get(licencia=u['conductor_license'])
-                except Conductor.DoesNotExist:
-                    self.stdout.write(self.style.WARNING(f"Conductor con licencia {u['conductor_license']} no encontrado!"))
+                conductor = Conductor.objects.filter(licencia=u['conductor_license']).first()
+                if conductor is None:
+                    vinculados = PerfilUsuario.objects.filter(conductor__isnull=False).values('conductor_id')
+                    conductor = (Conductor.objects.exclude(estado__in=['De baja', 'No apto'])
+                                 .exclude(pk__in=vinculados).order_by('apellidos').first())
+                    if conductor:
+                        self.stdout.write(self.style.WARNING(
+                            f"No existe la licencia {u['conductor_license']}; se vincula con {conductor.apellidos}, {conductor.nombres}. "
+                            "Ejecute primero 'python manage.py seed_data' para cargar los datos de demostración."
+                        ))
+                    else:
+                        self.stdout.write(self.style.WARNING(
+                            "No hay conductores registrados: la cuenta queda sin vincular. "
+                            "Ejecute 'python manage.py seed_data' y luego este comando de nuevo."
+                        ))
 
             # Crear PerfilUsuario
             PerfilUsuario.objects.create(

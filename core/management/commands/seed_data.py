@@ -78,6 +78,11 @@ class Command(BaseCommand):
         d = lambda n: hoy + datetime.timedelta(days=n)  # noqa: E731
 
         self.stdout.write('Eliminando datos operativos anteriores...')
+        # Se recuerda qué cuenta estaba vinculada a qué licencia para volver a vincularla.
+        from core.models import PerfilUsuario
+        licencia_por_perfil = dict(
+            PerfilUsuario.objects.filter(conductor__isnull=False).values_list('pk', 'conductor__licencia')
+        )
         Valorizacion.objects.all().delete()
         Alerta.objects.all().delete()
         Notificacion.objects.all().delete()
@@ -287,7 +292,33 @@ class Command(BaseCommand):
         from alerts.services import escanear_documentos_y_generar_alertas
         escanear_documentos_y_generar_alertas()
 
+        vinculadas = self._revincular_cuentas(PerfilUsuario, licencia_por_perfil)
+        if vinculadas:
+            self.stdout.write(f'Cuentas de conductor vinculadas de nuevo: {vinculadas}')
+
         self.stdout.write(self.style.SUCCESS(
             f'Datos cargados: {len(conductores)} conductores, {len(vehiculos)} unidades, '
             f'{SolicitudServicio.objects.count()} solicitudes, {Valorizacion.objects.count()} valorizaciones.'
         ))
+
+    def _revincular_cuentas(self, PerfilUsuario, licencia_por_perfil):
+        """
+        Al borrar los conductores, las cuentas de rol Conductor quedan sin vínculo.
+        Se vuelven a vincular por su licencia; si ya no existe, la cuenta conductor1
+        va con Juan Alberto Pérez Quispe y las demás con un conductor libre.
+        """
+        vinculadas = 0
+        libres = list(Conductor.objects.exclude(estado__in=['De baja', 'No apto']).order_by('apellidos'))
+        for perfil in PerfilUsuario.objects.filter(rol='Conductor', conductor__isnull=True).select_related('usuario'):
+            licencia = licencia_por_perfil.get(perfil.pk)
+            if perfil.usuario.username == 'conductor1' and not licencia:
+                licencia = 'Q41258763'
+            conductor = Conductor.objects.filter(licencia=licencia).first() if licencia else None
+            ocupados = set(PerfilUsuario.objects.filter(conductor__isnull=False).values_list('conductor_id', flat=True))
+            if conductor is None or conductor.pk in ocupados:
+                conductor = next((c for c in libres if c.pk not in ocupados), None)
+            if conductor:
+                perfil.conductor = conductor
+                perfil.save(update_fields=['conductor', 'updated_at'])
+                vinculadas += 1
+        return vinculadas

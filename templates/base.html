@@ -167,6 +167,15 @@
                     </li>
                     {% endif %}
 
+                    <!-- Usuarios y accesos: Administrador -->
+                    {% if user.perfilusuario.rol == 'Administrador de operaciones' %}
+                    <li>
+                        <a href="{% url 'core:usuario_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'usuario_list' or request.resolver_match.url_name == 'usuario_create' or request.resolver_match.url_name == 'usuario_update' or request.resolver_match.url_name == 'usuario_password' %}active{% endif %}">
+                            <i class="bi bi-person-lock"></i> Usuarios y Accesos
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <!-- Configuración de catálogos (versión 2.0): Administrador, Finanzas -->
                     {% if user.perfilusuario.rol == 'Administrador de operaciones' or user.perfilusuario.rol == 'Finanzas' %}
                     <li>
