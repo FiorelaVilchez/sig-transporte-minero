@@ -3,110 +3,186 @@
 {% block title %}Inicio — SIG Transporte Minero{% endblock %}
 
 {% block content %}
-{% with rol=user.perfilusuario.rol %}
 <div class="container-fluid p-0">
     <!-- Encabezado -->
-    <div class="row mb-4">
-        <div class="col">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <div>
-                    <h1 class="h3 mb-1 fw-bold text-dark">Hola, {{ user.first_name|default:user.username }}</h1>
-                    <p class="text-muted mb-0">Sistema de Información Gerencial para la Gestión y Asignación de Recursos.</p>
-                </div>
-                <span class="badge bg-secondary px-3 py-2"><i class="bi bi-calendar3 me-1"></i>{{ today|date:"l, d \d\e F \d\e Y" }}</span>
-            </div>
-            <hr class="mt-3 mb-2">
+    <div class="cc-encabezado">
+        <div>
+            <div class="cc-eyebrow">{{ empresa_nombre }}</div>
+            <h1 class="mb-1">{{ saludo }}, {{ user.first_name|default:user.username }}</h1>
+            <div class="cc-meta">{{ fecha_larga|capfirst }}<span class="cc-sep"></span>{{ rol }}</div>
         </div>
     </div>
 
-    <!-- Contexto -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card card-premium accent-header">
-                <div class="card-body p-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-9">
-                            <h4 class="card-title mb-2">
-                                <i class="bi bi-info-circle-fill text-accent me-2"></i>Contexto Organizacional
-                            </h4>
-                            <p class="card-text text-secondary mb-3" style="line-height: 1.7;">
-                                Este sistema automatiza la programación de servicios, la asignación de conductores y vehículos, el control documental
-                                de licencias, revisiones técnicas y seguros, la ejecución de cada servicio y su valorización. El objetivo es evitar
-                                asignaciones ineficientes, documentos vencidos y demoras operativas o de cobro.
-                            </p>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge bg-light text-dark"><i class="bi bi-cpu text-accent me-1"></i>Asignación con reglas R1 a R10</span>
-                                <span class="badge bg-light text-dark"><i class="bi bi-file-earmark-check text-accent me-1"></i>Matriz de requisitos documentales</span>
-                                <span class="badge bg-light text-dark"><i class="bi bi-clipboard-check text-accent me-1"></i>Checklist e incidencias</span>
-                                <span class="badge bg-light text-dark"><i class="bi bi-receipt text-accent me-1"></i>Valorizaciones y cobranza</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 text-center d-none d-md-block">
-                            <i class="bi bi-cone-striped text-accent" style="font-size: 5.5rem; opacity: 0.85;"></i>
-                        </div>
-                    </div>
-                </div>
+    {% if rol == 'Administrador de operaciones' or rol == 'Supervisor' or rol == 'Gerencia' %}
+    <!-- Resumen del día -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Servicios programados hoy</div>
+                <div class="cc-tile-valor">{{ servicios_hoy }}</div>
+                <div class="cc-tile-pie"><span class="cc-dot {% if en_ruta %}ok{% else %}neutro{% endif %}"></span>{{ en_ruta }} en ruta ahora</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Solicitudes por asignar</div>
+                <div class="cc-tile-valor">{{ por_asignar }}</div>
+                <div class="cc-tile-pie"><span class="cc-dot {% if reprogramadas %}atencion{% else %}ok{% endif %}"></span>{{ reprogramadas }} reprogramada{{ reprogramadas|pluralize }}</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Alertas activas</div>
+                <div class="cc-tile-valor">{{ alertas_activas }}</div>
+                <div class="cc-tile-pie"><span class="cc-dot {% if alertas_altas %}critico{% else %}ok{% endif %}"></span>{{ alertas_altas }} de riesgo alto</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Documentos por vencer (30 días)</div>
+                <div class="cc-tile-valor">{{ docs_por_vencer }}</div>
+                <div class="cc-tile-pie"><span class="cc-dot {% if docs_vencidos %}critico{% else %}ok{% endif %}"></span>{{ docs_vencidos }} vencido{{ docs_vencidos|pluralize }}</div>
             </div>
         </div>
     </div>
+    {% elif rol == 'Finanzas' %}
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Monto por cobrar</div><div class="cc-tile-valor"><span class="cc-tile-moneda">S/</span>{{ por_cobrar|floatformat:"0g" }}</div><div class="cc-tile-pie"><span class="cc-dot neutro"></span>Enviadas, conformes y facturadas</div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Cobrado en el mes</div><div class="cc-tile-valor"><span class="cc-tile-moneda">S/</span>{{ cobrado_mes|floatformat:"0g" }}</div><div class="cc-tile-pie"><span class="cc-dot ok"></span>Valorizaciones pagadas</div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Borradores por enviar</div><div class="cc-tile-valor">{{ borradores }}</div><div class="cc-tile-pie"><span class="cc-dot {% if borradores %}atencion{% else %}ok{% endif %}"></span>Servicios completados sin enviar</div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="cc-tile"><div class="cc-tile-label">Cobros atrasados</div><div class="cc-tile-valor">{{ atrasadas }}</div><div class="cc-tile-pie"><span class="cc-dot {% if atrasadas %}critico{% else %}ok{% endif %}"></span>Más de 15 días sin conformidad</div></div></div>
+    </div>
+    {% endif %}
 
-    <!-- Accesos rápidos según el rol -->
+    <!-- Accesos rápidos -->
+    <div class="cc-seccion">Accesos rápidos</div>
     <div class="row g-3 mb-4">
-        <div class="col-12"><h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge-fill text-accent me-2"></i>Accesos rápidos</h5></div>
         {% if rol == 'Administrador de operaciones' %}
-            {% url 'assignments:solicitudes_pendientes' as u1 %}{% url 'service_requests:solicitud_create' as u2 %}{% url 'assignments:programacion' as u3 %}{% url 'alerts:alerta_list' as u4 %}
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'assignments:solicitudes_pendientes' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-cpu"></i></span><span><strong>Asignar servicios</strong><small>Pendientes y reprogramadas</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'service_requests:solicitud_create' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-plus-lg"></i></span><span><strong>Nueva solicitud</strong><small>Registrar un pedido del cliente</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'assignments:programacion' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-calendar-week"></i></span><span><strong>Programación semanal</strong><small>Servicios y carga de horas</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'dashboard:operativo' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-bar-chart-line"></i></span><span><strong>Centro de control</strong><small>Indicadores de la operación</small></span></a></div>
         {% elif rol == 'Supervisor' %}
-            {% url 'documents:document_list' as u1 %}{% url 'alerts:alerta_list' as u2 %}{% url 'assignments:programacion' as u3 %}{% url 'drivers:conductor_list' as u4 %}
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'documents:document_list' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-file-earmark-text"></i></span><span><strong>Control documental</strong><small>Vigencias y visto bueno de mina</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'alerts:alerta_list' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-bell"></i></span><span><strong>Alertas</strong><small>Riesgos por atender</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'assignments:programacion' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-calendar-week"></i></span><span><strong>Programación semanal</strong><small>Servicios por día</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'dashboard:operativo' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-bar-chart-line"></i></span><span><strong>Centro de control</strong><small>Indicadores de la operación</small></span></a></div>
         {% elif rol == 'Gerencia' %}
-            {% url 'dashboard:operativo' as u1 %}{% url 'dashboard:reportes' as u2 %}{% url 'assignments:programacion' as u3 %}{% url 'billing:valorizacion_list' as u4 %}
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'dashboard:operativo' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-bar-chart-line"></i></span><span><strong>Centro de control</strong><small>Indicadores de la operación</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'dashboard:reportes' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-file-earmark-bar-graph"></i></span><span><strong>Reportes gerenciales</strong><small>Archivos para Power BI</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'billing:valorizacion_list' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-receipt"></i></span><span><strong>Valorizaciones</strong><small>Montos por cobrar</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'assignments:programacion' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-calendar-week"></i></span><span><strong>Programación semanal</strong><small>Servicios por día</small></span></a></div>
         {% elif rol == 'Finanzas' %}
-            {% url 'billing:valorizacion_list' as u1 %}{% url 'core:configuracion' as u2 %}
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'billing:valorizacion_list' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-receipt"></i></span><span><strong>Valorizaciones</strong><small>Ciclo de cobro por servicio</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'core:configuracion' %}#tarifas" class="acceso-rapido"><span class="icono"><i class="bi bi-tags"></i></span><span><strong>Tarifas</strong><small>Precios por cliente y tipo</small></span></a></div>
         {% elif rol == 'Conductor' %}
-            {% url 'assignments:mis_servicios' as u1 %}{% url 'core:perfil' as u2 %}
-        {% endif %}
-
-        {% if rol == 'Administrador de operaciones' %}
-            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-cpu"></i></span><div><div class="fw-semibold">Asignar servicios</div><div class="small text-muted">Solicitudes pendientes y reprogramadas</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-plus-circle"></i></span><div><div class="fw-semibold">Nueva solicitud</div><div class="small text-muted">Registrar un pedido del cliente</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u3 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-calendar-week"></i></span><div><div class="fw-semibold">Programación semanal</div><div class="small text-muted">Servicios por día y carga de horas</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u4 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-exclamation-triangle"></i></span><div><div class="fw-semibold">Alertas activas</div><div class="small text-muted">Documentos, checklist e incidencias</div></div></div></a></div>
-        {% elif rol == 'Supervisor' %}
-            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-file-earmark-medical"></i></span><div><div class="fw-semibold">Control documental</div><div class="small text-muted">Vigencias y visto bueno de mina</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-exclamation-triangle"></i></span><div><div class="fw-semibold">Alertas activas</div><div class="small text-muted">Riesgos por atender</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u3 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-calendar-week"></i></span><div><div class="fw-semibold">Programación semanal</div><div class="small text-muted">Servicios por día</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u4 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-people"></i></span><div><div class="fw-semibold">Conductores</div><div class="small text-muted">Fichas y habilitaciones</div></div></div></a></div>
-        {% elif rol == 'Gerencia' %}
-            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-speedometer2"></i></span><div><div class="fw-semibold">Dashboard operativo</div><div class="small text-muted">Indicadores del mes</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-graph-up"></i></span><div><div class="fw-semibold">Reportes gerenciales</div><div class="small text-muted">Archivos para Power BI</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u3 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-calendar-week"></i></span><div><div class="fw-semibold">Programación semanal</div><div class="small text-muted">Servicios por día</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u4 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-receipt"></i></span><div><div class="fw-semibold">Valorizaciones</div><div class="small text-muted">Montos por cobrar</div></div></div></a></div>
-        {% elif rol == 'Finanzas' %}
-            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-receipt"></i></span><div><div class="fw-semibold">Valorizaciones</div><div class="small text-muted">Ciclo de cobro por servicio</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}#tarifas" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-cash-stack"></i></span><div><div class="fw-semibold">Tarifas</div><div class="small text-muted">Precios por cliente y tipo</div></div></div></a></div>
-        {% elif rol == 'Conductor' %}
-            <div class="col-sm-6 col-xl-3"><a href="{{ u1 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-signpost-split"></i></span><div><div class="fw-semibold">Mis servicios</div><div class="small text-muted">Checklist, ruta y gastos</div></div></div></a></div>
-            <div class="col-sm-6 col-xl-3"><a href="{{ u2 }}" class="card acceso-rapido h-100 p-3"><div class="d-flex gap-3 align-items-center"><span class="icono"><i class="bi bi-person-circle"></i></span><div><div class="fw-semibold">Mi perfil</div><div class="small text-muted">Datos de la cuenta</div></div></div></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'assignments:mis_servicios' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-signpost-split"></i></span><span><strong>Mis servicios</strong><small>Checklist, ruta y gastos</small></span></a></div>
+            <div class="col-sm-6 col-xl-3"><a href="{% url 'core:perfil' %}" class="acceso-rapido"><span class="icono"><i class="bi bi-person"></i></span><span><strong>Mi perfil</strong><small>Datos de la cuenta</small></span></a></div>
         {% endif %}
     </div>
 
-    <!-- Roles del sistema -->
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-accent me-2"></i>Roles definidos del sistema</h5>
-        </div>
-        {% for nombre, icono, descripcion in roles %}
-        <div class="col-sm-6 col-lg">
-            <div class="card h-100 border-0 shadow-sm p-3 {% if nombre == rol %}border-top border-3 border-warning{% endif %}">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-light p-2 rounded me-3 text-secondary"><i class="bi {{ icono }} fs-5"></i></div>
-                    <h6 class="mb-0 fw-bold">{{ nombre }}</h6>
+    <!-- Listas de trabajo -->
+    {% if rol == 'Administrador de operaciones' or rol == 'Supervisor' or rol == 'Gerencia' %}
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div><div class="cc-panel-titulo">Servicios de hoy y mañana</div><div class="cc-panel-sub">Asignaciones vigentes por hora de salida</div></div>
+                    <a href="{% url 'assignments:programacion' %}" class="small">Ver semana</a>
                 </div>
-                <p class="card-text text-muted small mb-0">{{ descripcion }}</p>
-                {% if nombre == rol %}<span class="badge bg-warning align-self-start mt-2">Su rol</span>{% endif %}
+                {% if agenda %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead><tr><th>Salida</th><th>Cliente</th><th>Ruta</th><th>Conductor · unidad</th><th>Estado</th></tr></thead>
+                        <tbody>
+                        {% for a in agenda %}
+                            <tr>
+                                <td class="text-nowrap"><div class="fw-semibold">{{ a.solicitud.hora_servicio|time:"H:i" }}</div><small class="text-muted">{% if a.solicitud.fecha_servicio == today %}Hoy{% else %}Mañana{% endif %}</small></td>
+                                <td><a href="{% url 'service_requests:solicitud_detail' a.solicitud.pk %}" class="text-decoration-none fw-medium">{{ a.solicitud.cliente }}</a></td>
+                                <td class="small text-nowrap">{{ a.solicitud.origen }} <i class="bi bi-arrow-right text-muted"></i> {{ a.solicitud.destino }}</td>
+                                <td class="small">{{ a.conductor.apellidos }}<div class="text-muted">{{ a.vehiculo.placa }} · {{ a.vehiculo.tipo }}</div></td>
+                                <td><span class="badge {% if a.estado_operativo == 'En ruta' %}bg-warning{% elif a.estado_operativo == 'Completado' %}bg-success{% elif a.estado_operativo == 'Con incidencia' %}bg-danger{% else %}bg-primary{% endif %}">{{ a.estado_operativo }}</span></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="cc-vacio">No hay servicios asignados para hoy ni mañana.</p>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
+        <div class="col-xl-4">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div><div class="cc-panel-titulo">Alertas recientes</div><div class="cc-panel-sub">Las cinco más nuevas</div></div>
+                    {% if rol != 'Gerencia' %}<a href="{% url 'alerts:alerta_list' %}" class="small">Ver todas</a>{% endif %}
+                </div>
+                <ul class="cc-lista-alertas">
+                    {% for al in alertas_recientes %}
+                    <li>
+                        <span class="cc-dot {% if al.nivel_riesgo == 'Alto' %}critico{% elif al.nivel_riesgo == 'Medio' %}atencion{% else %}neutro{% endif %}"></span>
+                        <div><div class="cc-alerta-texto">{{ al.mensaje }}</div><small>{{ al.tipo_alerta }} · {{ al.fecha_generacion|date:"d/m H:i" }}</small></div>
+                    </li>
+                    {% empty %}
+                    <li class="text-muted small">No hay alertas activas.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
     </div>
+    {% elif rol == 'Finanzas' %}
+    <div class="cc-panel">
+        <div class="cc-panel-head">
+            <div><div class="cc-panel-titulo">Valorizaciones abiertas</div><div class="cc-panel-sub">Las más recientes que aún no se pagan</div></div>
+            <a href="{% url 'billing:valorizacion_list' %}" class="small">Ver todas</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Solicitud</th><th>Cliente</th><th>Servicio</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+                <tbody>
+                {% for v in valorizaciones %}
+                    <tr>
+                        <td><a href="{% url 'billing:valorizacion_detail' v.pk %}" class="fw-semibold text-decoration-none">#{{ v.solicitud_id }}</a></td>
+                        <td>{{ v.solicitud.cliente }}</td>
+                        <td class="text-nowrap">{{ v.solicitud.fecha_servicio|date:"d/m/Y" }}</td>
+                        <td class="text-end text-nowrap fw-semibold">S/ {{ v.total|floatformat:"2g" }}</td>
+                        <td><span class="badge {% if v.estado == 'Observada' %}bg-danger{% elif v.estado == 'Borrador' %}bg-secondary{% else %}bg-primary{% endif %}">{{ v.estado }}</span>{% if v.cobro_atrasado %} <span class="badge bg-warning">{{ v.dias_sin_conformidad }} días</span>{% endif %}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="text-muted">No hay valorizaciones abiertas.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% elif rol == 'Conductor' %}
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head"><div class="cc-panel-titulo">Mis próximos servicios</div><a href="{% url 'assignments:mis_servicios' %}" class="small">Ir a mis servicios</a></div>
+                <ul class="cc-lista-riesgo">
+                    {% for a in mis_proximos %}
+                    <li><span><strong>{{ a.solicitud.fecha_servicio|date:"d/m" }} {{ a.solicitud.hora_servicio|time:"H:i" }}</strong> · {{ a.solicitud.cliente }}<br><small class="text-muted">{{ a.solicitud.origen }} → {{ a.solicitud.destino }} · {{ a.vehiculo.placa }}</small></span><span class="badge bg-primary">{{ a.estado_operativo }}</span></li>
+                    {% empty %}
+                    <li class="text-muted">No tiene servicios programados.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head"><div class="cc-panel-titulo">Documentos que requieren atención</div></div>
+                <ul class="cc-lista-riesgo">
+                    {% for d in mis_docs_alerta %}
+                    <li><span>{{ d.tipo_documento }}<br><small class="text-muted">Vence el {{ d.fecha_vencimiento|date:"d/m/Y" }}</small></span><span class="cc-estado {% if d.estado_documento == 'Vencido' %}critico{% else %}atencion{% endif %}">{{ d.estado_documento }}</span></li>
+                    {% empty %}
+                    <li><span>Todos sus documentos están vigentes.</span><span class="cc-estado ok">OK</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
-{% endwith %}
 {% endblock %}

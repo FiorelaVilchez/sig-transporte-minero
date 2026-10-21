@@ -39,10 +39,11 @@ def dashboard_operativo(request):
         'Gerencia',
     )
 
-    from dashboard.services import get_kpis_ejecucion
+    from dashboard.services import get_kpis_ejecucion, get_series_dashboard
     context = {
         'kpis': kpis,
         'kpis2': get_kpis_ejecucion(),
+        'series': get_series_dashboard(),
         'ultima_actualizacion': ultima_actualizacion,
         'puede_actualizar': puede_actualizar,
         'solicitudes_labels': json.dumps(list(kpis['solicitudes_por_estado'].keys())),

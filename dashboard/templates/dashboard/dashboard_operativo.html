@@ -1,299 +1,211 @@
 {% extends 'base.html' %}
 
-{% block title %}SIG — Dashboard Operativo{% endblock %}
+{% block title %}Centro de Control Operativo — SIG Transporte Minero{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show card-premium" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
+<div class="container-fluid p-0">
+    {% for message in messages %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    {% endfor %}
 
-    <div class="card card-premium accent-header mb-4">
-        <div class="card-body">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-                <div>
-                    <h2 class="card-title mb-1">
-                        <i class="bi bi-speedometer2 text-accent me-2"></i>Dashboard Operativo
-                    </h2>
-                    <p class="text-muted small mb-0">
-                        Indicadores KPI de asignaciones, documentación y riesgo operativo en tiempo real.
-                    </p>
-                    {% if ultima_actualizacion %}
-                        <p class="text-secondary small mb-0 mt-2">
-                            <i class="bi bi-clock-history me-1"></i>
-                            Última actualización: {{ ultima_actualizacion }}
-                        </p>
+    <!-- Encabezado -->
+    <div class="cc-encabezado">
+        <div>
+            <div class="cc-eyebrow">{{ empresa_nombre }} · Transporte de personal minero</div>
+            <h1 class="mb-1">Centro de control operativo</h1>
+            <div class="cc-meta">
+                Corte al {% now "d/m/Y, H:i" %}
+                <span class="cc-sep"></span>
+                Último recálculo manual: {{ ultima_actualizacion|default:"sin registro" }}
+            </div>
+        </div>
+        {% if puede_actualizar %}
+        <form action="{% url 'dashboard:actualizar' %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Recalcular indicadores</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Indicadores principales -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Servicios completados en el mes</div>
+                <div class="cc-tile-valor">{{ kpis2.servicios_completados_mes }}</div>
+                <div class="cc-tile-pie">
+                    {% if kpis2.cumplimiento_servicio is None %}
+                        <span class="cc-dot neutro"></span>Sin servicios cerrados aún
                     {% else %}
-                        <p class="text-secondary small mb-0 mt-2">
-                            <i class="bi bi-clock-history me-1"></i>
-                            Última actualización: sin recálculo manual registrado
-                        </p>
+                        <span class="cc-dot {% if kpis2.cumplimiento_servicio >= 90 %}ok{% elif kpis2.cumplimiento_servicio >= 75 %}atencion{% else %}critico{% endif %}"></span>
+                        Cumplimiento {{ kpis2.cumplimiento_servicio }} %
                     {% endif %}
                 </div>
-                {% if puede_actualizar %}
-                <div>
-                    <form action="{% url 'dashboard:actualizar' %}" method="POST" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-accent d-flex align-items-center gap-2">
-                            <i class="bi bi-arrow-repeat"></i> Actualizar indicadores
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
             </div>
-
-            <!-- Sección 1: Indicadores de asignación -->
-            <h5 class="fw-bold text-secondary mb-3">
-                <i class="bi bi-diagram-3 me-2"></i>Indicadores de asignación
-            </h5>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Total de asignaciones</div>
-                            <div class="display-5 fw-bold text-primary">{{ kpis.total_asignaciones }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Asignaciones aprobadas</div>
-                            <div class="display-5 fw-bold text-success">{{ kpis.asignaciones_aprobadas }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Asignaciones rechazadas</div>
-                            <div class="display-5 fw-bold text-danger">{{ kpis.asignaciones_rechazadas }}</div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Asignaciones aprobadas</div>
+                <div class="cc-tile-valor">{{ kpis.asignaciones_aprobadas }}<span class="cc-tile-de"> de {{ kpis.total_asignaciones }}</span></div>
+                <div class="cc-tile-pie">
+                    <span class="cc-dot {% if kpis.asignaciones_rechazadas %}atencion{% else %}ok{% endif %}"></span>
+                    {{ kpis.asignaciones_rechazadas }} rechazada{{ kpis.asignaciones_rechazadas|pluralize }} por las reglas
                 </div>
             </div>
-
-            <!-- Sección 2: Indicadores documentales y de riesgo -->
-            <h5 class="fw-bold text-secondary mb-3">
-                <i class="bi bi-file-earmark-medical me-2"></i>Indicadores documentales y de riesgo
-            </h5>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Documentos vencidos</div>
-                            <div class="display-5 fw-bold text-danger">{{ kpis.documentos_vencidos }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Documentos por vencer</div>
-                            <div class="display-5 fw-bold text-warning">{{ kpis.documentos_por_vencer }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Alertas de riesgo alto</div>
-                            <div class="display-5 fw-bold text-danger">{{ kpis.alertas_riesgo_alto }}</div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Monto por cobrar</div>
+                <div class="cc-tile-valor"><span class="cc-tile-moneda">S/</span>{{ kpis2.por_cobrar|floatformat:"0g" }}</div>
+                <div class="cc-tile-pie">
+                    <span class="cc-dot {% if kpis2.cobros_atrasados %}atencion{% else %}ok{% endif %}"></span>
+                    {% if kpis2.cobros_atrasados %}{{ kpis2.cobros_atrasados }} con más de 15 días sin conformidad{% else %}Cobros al día{% endif %}
                 </div>
             </div>
-
-            <!-- Sección 2b: Ejecución, cumplimiento y cobranza -->
-            <h5 class="fw-bold text-secondary mb-3">
-                <i class="bi bi-activity me-2"></i>Ejecución, cumplimiento y cobranza
-            </h5>
-            <div class="row g-3 mb-4">
-                <div class="col-md-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Cumplimiento del servicio (mes)</div>
-                            <div class="display-6 fw-bold text-success">{% if kpis2.cumplimiento_servicio is not None %}{{ kpis2.cumplimiento_servicio }}%{% else %}—{% endif %}</div>
-                            <div class="small text-muted">{{ kpis2.servicios_completados_mes }} servicios completados</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Incidencias del mes</div>
-                            <div class="display-6 fw-bold text-danger">{{ kpis2.incidencias_mes }}</div>
-                            <div class="small text-muted">{{ kpis2.incidencias_graves_abiertas }} graves sin resolver · {{ kpis2.en_ruta }} en ruta ahora</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Checklists aprobados (mes)</div>
-                            <div class="display-6 fw-bold text-primary">{% if kpis2.checklists_aprobados_pct is not None %}{{ kpis2.checklists_aprobados_pct }}%{% else %}—{% endif %}</div>
-                            <div class="small text-muted">{{ kpis2.checklists_mes }} registrados</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Por cobrar</div>
-                            <div class="display-6 fw-bold text-warning">S/ {{ kpis2.por_cobrar|floatformat:0 }}</div>
-                            <div class="small text-muted">Cobrado en el mes: S/ {{ kpis2.cobrado_mes|floatformat:0 }} · {{ kpis2.cobros_atrasados }} con más de 15 días</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Conductores cerca del límite</div>
-                            <div class="display-6 fw-bold text-warning">{{ kpis2.conductores_cerca_limite }}</div>
-                            <div class="small text-muted">80 % o más de las 60 h semanales</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Documentos sin visto bueno de mina</div>
-                            <div class="display-6 fw-bold text-danger">{{ kpis2.documentos_pendientes_mina }}</div>
-                            <div class="small text-muted">Bloquean la asignación (R8)</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección 3: Distribución de carga operativa -->
-            <h5 class="fw-bold text-secondary mb-3">
-                <i class="bi bi-bar-chart-line me-2"></i>Distribución de carga operativa
-            </h5>
-            <div class="row g-4">
-                <div class="col-lg-5">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3">Solicitudes por estado</h6>
-                            <div style="max-height: 320px;">
-                                <canvas id="chartSolicitudes"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-7">
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3">Top conductores por asignaciones</h6>
-                            <div style="max-height: 220px;">
-                                <canvas id="chartConductores"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3">Top vehículos por asignaciones</h6>
-                            <div style="max-height: 220px;">
-                                <canvas id="chartVehiculos"></canvas>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="cc-tile">
+                <div class="cc-tile-label">Alertas de riesgo alto</div>
+                <div class="cc-tile-valor">{{ kpis.alertas_riesgo_alto }}</div>
+                <div class="cc-tile-pie">
+                    <span class="cc-dot {% if kpis.alertas_riesgo_alto %}critico{% else %}ok{% endif %}"></span>
+                    {% if kpis.alertas_riesgo_alto %}<a href="{% url 'alerts:alerta_list' %}?nivel_riesgo=Alto">Revisar alertas</a>{% else %}Sin riesgos críticos{% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Actividad y estado de solicitudes -->
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div>
+                        <div class="cc-panel-titulo">Servicios por día</div>
+                        <div class="cc-panel-sub">Últimos 7 días y próximos 6 · servicios asignados</div>
+                    </div>
+                    <div class="cc-leyenda">
+                        <span><i class="cc-swatch" style="background:#1e3a5f"></i>Realizados</span>
+                        <span><i class="cc-swatch" style="background:#f39c12"></i>Hoy</span>
+                        <span><i class="cc-swatch" style="background:#b7c6d8"></i>Programados</span>
+                    </div>
+                </div>
+                {% if series.escala_dias %}
+                <div class="cc-columnas" role="img" aria-label="Servicios por día">
+                    {% for d in series.dias %}
+                    <div class="cc-col" title="{{ d.fecha|date:'l d/m' }}: {{ d.total }} servicio{{ d.total|pluralize }}">
+                        <div class="cc-col-area">
+                            {% if d.total %}<span class="cc-col-valor">{{ d.total }}</span>{% endif %}
+                            <div class="cc-col-barra {{ d.tramo }}" style="height: {% if d.total %}{{ d.pct }}%{% else %}0{% endif %};"></div>
+                        </div>
+                        <div class="cc-col-dia {% if d.tramo == 'hoy' %}hoy{% endif %}">{{ d.dia }}<span>{{ d.fecha|date:"d" }}</span></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="cc-vacio">No hay servicios asignados en este periodo.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div>
+                        <div class="cc-panel-titulo">Solicitudes por estado</div>
+                        <div class="cc-panel-sub">{{ series.total_solicitudes }} solicitudes registradas</div>
+                    </div>
+                </div>
+                <div class="cc-apilada" role="img" aria-label="Distribución de solicitudes por estado">
+                    {% for e in series.estados %}{% if e.total %}<span style="width: {{ e.pct|stringformat:'s' }}%; background: {{ e.color }};" title="{{ e.estado }}: {{ e.total }}"></span>{% endif %}{% endfor %}
+                </div>
+                <ul class="cc-lista-estados">
+                    {% for e in series.estados %}
+                    <li>
+                        <span><i class="cc-swatch" style="background: {{ e.color }}"></i>{{ e.estado }}</span>
+                        <span class="cc-num">{{ e.total }}<small>{{ e.pct|floatformat:0 }} %</small></span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Riesgo, carga y uso -->
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head"><div class="cc-panel-titulo">Riesgo y cumplimiento</div></div>
+                <ul class="cc-lista-riesgo">
+                    <li>
+                        <span>Documentos vencidos</span>
+                        <span class="cc-estado {% if kpis.documentos_vencidos %}critico{% else %}ok{% endif %}">{{ kpis.documentos_vencidos }}</span>
+                    </li>
+                    <li>
+                        <span>Documentos por vencer (30 días)</span>
+                        <span class="cc-estado {% if kpis.documentos_por_vencer %}atencion{% else %}ok{% endif %}">{{ kpis.documentos_por_vencer }}</span>
+                    </li>
+                    <li>
+                        <span>Sin visto bueno de mina</span>
+                        <span class="cc-estado {% if kpis2.documentos_pendientes_mina %}atencion{% else %}ok{% endif %}">{{ kpis2.documentos_pendientes_mina }}</span>
+                    </li>
+                    <li>
+                        <span>Conductores sobre el 80 % de horas semanales</span>
+                        <span class="cc-estado {% if kpis2.conductores_cerca_limite %}atencion{% else %}ok{% endif %}">{{ kpis2.conductores_cerca_limite }}</span>
+                    </li>
+                    <li>
+                        <span>Incidencias del mes <small class="text-muted">({{ kpis2.incidencias_graves_abiertas }} graves abiertas)</small></span>
+                        <span class="cc-estado {% if kpis2.incidencias_graves_abiertas %}critico{% elif kpis2.incidencias_mes %}atencion{% else %}ok{% endif %}">{{ kpis2.incidencias_mes }}</span>
+                    </li>
+                    <li>
+                        <span>Checklists aprobados en el mes</span>
+                        <span class="cc-estado neutro">{% if kpis2.checklists_aprobados_pct is None %}—{% else %}{{ kpis2.checklists_aprobados_pct }} %{% endif %}</span>
+                    </li>
+                    <li>
+                        <span>Servicios en ruta ahora</span>
+                        <span class="cc-estado neutro">{{ kpis2.en_ruta }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div>
+                        <div class="cc-panel-titulo">Asignaciones por conductor</div>
+                        <div class="cc-panel-sub">Los seis con más servicios</div>
+                    </div>
+                </div>
+                {% for c in series.conductores %}
+                <div class="cc-fila-barra" title="{{ c.nombre }}: {{ c.total }}">
+                    <div class="cc-fila-texto"><span>{{ c.nombre }}</span><span class="cc-num">{{ c.total }}</span></div>
+                    <div class="cc-track"><div class="cc-fill" style="width: {{ c.pct }}%"></div></div>
+                </div>
+                {% empty %}
+                <p class="cc-vacio">Sin asignaciones registradas.</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                    <div>
+                        <div class="cc-panel-titulo">Uso de unidades</div>
+                        <div class="cc-panel-sub">Las seis con más servicios</div>
+                    </div>
+                </div>
+                {% for v in series.vehiculos %}
+                <div class="cc-fila-barra" title="{{ v.nombre }}: {{ v.total }}">
+                    <div class="cc-fila-texto"><span>{{ v.nombre }}</span><span class="cc-num">{{ v.total }}</span></div>
+                    <div class="cc-track"><div class="cc-fill" style="width: {{ v.pct }}%"></div></div>
+                </div>
+                {% empty %}
+                <p class="cc-vacio">Sin asignaciones registradas.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-    const solicitudesLabels = {{ solicitudes_labels|safe }};
-    const solicitudesValues = {{ solicitudes_values|safe }};
-    const conductoresLabels = {{ conductores_labels|safe }};
-    const conductoresValues = {{ conductores_values|safe }};
-    const vehiculosLabels = {{ vehiculos_labels|safe }};
-    const vehiculosValues = {{ vehiculos_values|safe }};
-
-    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
-    Chart.defaults.color = '#64748b';
-    Chart.defaults.plugins.tooltip.backgroundColor = '#111c24';
-    const coloresEstado = {
-        'Pendiente': '#94a3b8', 'Asignada': '#1e3a5f', 'Reprogramada': '#f39c12',
-        'Completada': '#22a06b', 'Cancelada': '#e5484d'
-    };
-    const ejesBarras = {
-        x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f6' }, border: { display: false } },
-        y: { ticks: { autoSkip: false }, grid: { display: false }, border: { display: false } }
-    };
-
-    new Chart(document.getElementById('chartSolicitudes'), {
-        type: 'doughnut',
-        data: {
-            labels: solicitudesLabels,
-            datasets: [{
-                data: solicitudesValues,
-                backgroundColor: solicitudesLabels.map(e => coloresEstado[e] || '#cbd5e1'),
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                hoverOffset: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '62%',
-            plugins: {
-                legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 14 } }
-            }
-        }
-    });
-
-    new Chart(document.getElementById('chartConductores'), {
-        type: 'bar',
-        data: {
-            labels: conductoresLabels,
-            datasets: [{
-                label: 'Asignaciones',
-                data: conductoresValues,
-                backgroundColor: '#1e3a5f',
-                borderRadius: 6,
-                maxBarThickness: 16
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: ejesBarras
-        }
-    });
-
-    new Chart(document.getElementById('chartVehiculos'), {
-        type: 'bar',
-        data: {
-            labels: vehiculosLabels,
-            datasets: [{
-                label: 'Asignaciones',
-                data: vehiculosValues,
-                backgroundColor: '#f39c12',
-                borderRadius: 6,
-                maxBarThickness: 16
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: ejesBarras
-        }
-    });
-</script>
 {% endblock %}

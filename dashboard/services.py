@@ -167,3 +167,75 @@ def get_kpis_ejecucion():
         'documentos_pendientes_mina': pendientes_mina,
         'en_ruta': Asignacion.objects.filter(estado_operativo='En ruta').count(),
     }
+
+
+def _con_porcentaje(filas, clave='total'):
+    """Agrega 'pct' (0-100) relativo al máximo, para dibujar barras en HTML."""
+    maximo = max((f[clave] for f in filas), default=0) or 1
+    for f in filas:
+        f['pct'] = round(f[clave] * 100 / maximo)
+    return filas
+
+
+def get_series_dashboard(dias_atras=7, dias_adelante=6):
+    """
+    Series para los gráficos del centro de control (sin dependencias de JavaScript):
+    servicios por día alrededor de hoy, solicitudes por estado, carga por
+    conductor y uso de unidades.
+    """
+    import datetime
+
+    from assignments.models import Asignacion
+
+    hoy = datetime.date.today()
+    inicio = hoy - datetime.timedelta(days=dias_atras)
+    fin = hoy + datetime.timedelta(days=dias_adelante)
+    activas = (
+        Asignacion.objects.filter(
+            estado_asignacion__in=['Aprobada', 'Observada'],
+            solicitud__fecha_servicio__range=(inicio, fin),
+        ).exclude(estado_operativo='Cancelado')
+        .values_list('solicitud__fecha_servicio', flat=True)
+    )
+    conteo = {}
+    for fecha in activas:
+        conteo[fecha] = conteo.get(fecha, 0) + 1
+    nombres = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
+    dias = []
+    for i in range((fin - inicio).days + 1):
+        fecha = inicio + datetime.timedelta(days=i)
+        dias.append({
+            'fecha': fecha,
+            'dia': nombres[fecha.weekday()],
+            'total': conteo.get(fecha, 0),
+            'tramo': 'hoy' if fecha == hoy else ('pasado' if fecha < hoy else 'futuro'),
+        })
+    _con_porcentaje(dias)
+    escala = max((d['total'] for d in dias), default=0)
+
+    colores = {
+        'Pendiente': '#94a3b8', 'Asignada': '#1e3a5f', 'Reprogramada': '#d97706',
+        'Completada': '#15803d', 'Cancelada': '#b42318',
+    }
+    por_estado = kpi_solicitudes_por_estado()
+    total_sol = sum(por_estado.values()) or 1
+    estados = [
+        {'estado': e, 'total': n, 'color': colores.get(e, '#cbd5e1'), 'pct': round(n * 100 / total_sol, 1)}
+        for e, n in por_estado.items()
+    ]
+
+    conductores = [
+        {'nombre': c['conductor'], 'total': c['total']} for c in kpi_asignaciones_por_conductor()[:6]
+    ]
+    vehiculos = [
+        {'nombre': v['vehiculo'], 'total': v['total']} for v in kpi_asignaciones_por_vehiculo()[:6]
+    ]
+    return {
+        'dias': dias,
+        'escala_dias': escala,
+        'estados': estados,
+        'total_solicitudes': sum(por_estado.values()),
+        'conductores': _con_porcentaje(conductores),
+        'vehiculos': _con_porcentaje(vehiculos),
+        'hoy': hoy,
+    }
