@@ -10,8 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
-from decouple import config
+
+import dj_database_url
+from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +29,15 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# Dominios desde los que se puede abrir el sistema. En local (DEBUG=True) basta con dejarlo vacío.
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+
+# Render publica el dominio del servicio en esta variable; se agrega solo.
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 
 # Application definition
@@ -57,6 +68,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Sirve los archivos estáticos en producción sin un servidor web aparte.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -93,9 +106,20 @@ WSGI_APPLICATION = 'sig_transporte_minero.wsgi.application'
 #   - Si DB_ENGINE=postgresql en .env → usa PostgreSQL (vía psycopg2-binary)
 #   - Si DB_ENGINE no está definida    → usa SQLite por defecto (desarrollo local rápido)
 
-_DB_ENGINE = config('DB_ENGINE', default='sqlite')
+#   - Si existe DATABASE_URL (servicios en la nube como Render) → tiene prioridad
 
-if _DB_ENGINE == 'postgresql':
+_DB_ENGINE = config('DB_ENGINE', default='sqlite')
+_DATABASE_URL = config('DATABASE_URL', default='')
+
+if _DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            _DATABASE_URL,
+            conn_max_age=config('DB_CONN_MAX_AGE', default=60, cast=int),
+            conn_health_checks=True,
+        )
+    }
+elif _DB_ENGINE == 'postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -157,6 +181,12 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+# Carpeta donde collectstatic reúne los archivos para producción.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -172,6 +202,15 @@ LOGOUT_REDIRECT_URL = 'core:login'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+# En el despliegue de demostración los archivos subidos se sirven desde Django.
+SERVE_MEDIA = config('SERVE_MEDIA', default=False, cast=bool)
+
+# Detrás del proxy HTTPS de Render: cookies seguras y redirección a https.
+if RENDER_EXTERNAL_HOSTNAME:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 

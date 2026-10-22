@@ -1,0 +1,37 @@
+# Despliegue de demostración en Render (plan gratuito).
+# En Render: New > Blueprint > elegir este repositorio > Apply.
+databases:
+  - name: sig-transporte-db
+    plan: free
+    region: virginia
+    databaseName: sig_transporte_minero
+    user: sig_transporte
+
+services:
+  - type: web
+    name: sig-transporte-minero
+    runtime: python
+    plan: free
+    region: virginia
+    branch: master
+    buildCommand: ./build.sh
+    startCommand: gunicorn sig_transporte_minero.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sig-transporte-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: SERVE_MEDIA
+        value: "True"
+      - key: EMPRESA_NOMBRE
+        value: Transportes Kallpa Andina S.A.C.
+      - key: RECARGAR_DEMO
+        value: "0"
+      - key: WEB_CONCURRENCY
+        value: "2"
