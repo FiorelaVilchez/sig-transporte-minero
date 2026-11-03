@@ -1,5 +1,6 @@
 import datetime
 
+from django.core.validators import RegexValidator
 from django.db import models
 
 from trucks.models import TipoVehiculo
@@ -29,7 +30,10 @@ class Conductor(models.Model):
         verbose_name="Tipos de vehículo que puede manejar",
     )
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='Disponible', verbose_name="Estado")
-    dni = models.CharField(max_length=8, unique=True, verbose_name="DNI")
+    dni = models.CharField(
+        max_length=8, unique=True, verbose_name="DNI",
+        validators=[RegexValidator(r'^\d{8}$', "El DNI debe tener 8 dígitos.")],
+    )
     telefono = models.CharField(max_length=20, blank=True, verbose_name="Teléfono")
     fecha_nacimiento = models.DateField(verbose_name="Fecha de Nacimiento")
     fecha_ingreso = models.DateField(verbose_name="Fecha de Ingreso")

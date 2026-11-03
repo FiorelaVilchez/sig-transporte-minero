@@ -83,7 +83,7 @@ def kpi_asignaciones_por_vehiculo():
         Asignacion.objects.filter(vehiculo__isnull=False)
         .values("vehiculo__placa")
         .annotate(total=Count("assignment_id"))
-        .order_by("-total")[:10]
+        .order_by("-total", "vehiculo__placa")[:10]
     )
     return [
         {"vehiculo": item["vehiculo__placa"], "total": item["total"]}

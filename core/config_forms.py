@@ -1,6 +1,7 @@
 from django import forms
 
 from billing.models import Tarifa
+from crm.models import Cliente
 from documents.models import DocumentoConductor, DocumentoVehiculo, RequisitoDocumental
 from trucks.forms import TipoVehiculoForm  # noqa: F401  (se reexporta para Configuración)
 from trucks.models import TipoVehiculo
@@ -37,6 +38,19 @@ class RequisitoForm(forms.ModelForm):
         return datos
 
 
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['razon_social', 'ruc', 'contacto', 'telefono', 'correo', 'activo']
+
+    def clean_razon_social(self):
+        nombre = ' '.join((self.cleaned_data.get('razon_social') or '').split())
+        repetido = Cliente.objects.filter(razon_social__iexact=nombre).exclude(pk=self.instance.pk)
+        if repetido.exists():
+            raise forms.ValidationError(f"Ya existe el cliente {repetido.first().razon_social}.")
+        return nombre
+
+
 class TarifaForm(forms.ModelForm):
     class Meta:
         model = Tarifa
@@ -45,3 +59,7 @@ class TarifaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['tipo_vehiculo'].queryset = TipoVehiculo.objects.filter(activo=True)
+        clientes = Cliente.objects.filter(activo=True)
+        if self.instance.pk:
+            clientes = (clientes | Cliente.objects.filter(pk=self.instance.cliente_id)).distinct()
+        self.fields['cliente'].queryset = clientes

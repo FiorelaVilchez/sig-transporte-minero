@@ -27,7 +27,9 @@ class SolicitudServicio(models.Model):
     ]
 
     request_id = models.BigAutoField(primary_key=True)
-    cliente = models.CharField(max_length=150, verbose_name="Cliente")
+    cliente = models.ForeignKey(
+        'crm.Cliente', on_delete=models.PROTECT, related_name='solicitudes', verbose_name="Cliente",
+    )
     fecha_servicio = models.DateField(verbose_name="Fecha de Servicio")
     hora_servicio = models.TimeField(verbose_name="Hora de Servicio")
     origen = models.CharField(max_length=200, verbose_name="Origen")

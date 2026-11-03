@@ -1,5 +1,6 @@
 from django import forms
 
+from crm.models import Cliente
 from trucks.models import TipoVehiculo
 
 from .models import SolicitudServicio
@@ -35,6 +36,12 @@ class SolicitudServicioForm(forms.ModelForm):
         self.fields['tipo_vehiculo_requerido'].label_from_instance = (
             lambda t: f"{t.nombre} (hasta {t.asientos_referencia} pasajeros)"
         )
+        clientes = Cliente.objects.filter(activo=True)
+        if self.instance.pk and self.instance.cliente_id:
+            clientes = (clientes | Cliente.objects.filter(pk=self.instance.cliente_id)).distinct()
+        self.fields['cliente'].queryset = clientes
+        self.fields['cliente'].empty_label = "Seleccione un cliente"
+        self.fields['cliente'].help_text = "Si el cliente no aparece, regístrelo en Configuración."
         self.es_edicion = bool(self.instance.pk)
 
     def clean(self):

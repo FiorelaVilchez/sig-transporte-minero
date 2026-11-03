@@ -19,6 +19,7 @@ from documents.models import DocumentoConductor, DocumentoVehiculo, RequisitoDoc
 from drivers.models import Conductor
 from service_requests.models import CambioSolicitud, SolicitudServicio
 from trucks.models import TipoVehiculo, Vehiculo
+from crm.models import Cliente
 
 HOY = datetime.date.today()
 
@@ -64,7 +65,7 @@ class EscenarioV2(TestCase):
 
     def crear_solicitud(self, fecha, hora, tipo, pasajeros=3, duracion=8, cliente='Cliente Demo S.A.C.', estado='Pendiente'):
         return SolicitudServicio.objects.create(
-            cliente=cliente, fecha_servicio=fecha, hora_servicio=hora, origen='Juliaca', destino='U.M. Cerro Azul',
+            cliente=Cliente.obtener(cliente), fecha_servicio=fecha, hora_servicio=hora, origen='Juliaca', destino='U.M. Cerro Azul',
             tipo_servicio='Traslado de personal', prioridad='Alta', tipo_vehiculo_requerido_id=tipo,
             pasajeros=pasajeros, duracion_horas=duracion, km_estimados=380, estado_solicitud=estado,
         )
@@ -208,7 +209,7 @@ class EjecucionDelServicioTests(EscenarioV2):
         self.assertFalse(self.checklist(horas_sueno=Decimal('5')).aprobado)
 
     def test_flujo_completo_hasta_la_valorizacion(self):
-        Tarifa.objects.create(cliente='cliente demo s.a.c.', tipo_vehiculo=self.camioneta,
+        Tarifa.objects.create(cliente=Cliente.obtener('cliente demo s.a.c.'), tipo_vehiculo=self.camioneta,
                               tarifa_base=Decimal('680'), km_incluidos=380, precio_km_adicional=Decimal('3.20'))
         self.checklist()
         self.asignacion.refresh_from_db()
@@ -272,7 +273,7 @@ class VistasV2Tests(EscenarioV2):
         asignar_automaticamente(self.solicitud)
         self.client.force_login(self.usuario('admin', 'Administrador de operaciones'))
         datos = {
-            'cliente': self.solicitud.cliente, 'fecha_servicio': self.solicitud.fecha_servicio.isoformat(),
+            'cliente': self.solicitud.cliente_id, 'fecha_servicio': self.solicitud.fecha_servicio.isoformat(),
             'hora_servicio': '06:00', 'origen': 'Juliaca', 'destino': 'U.M. Cerro Azul',
             'tipo_servicio': 'Traslado de personal', 'prioridad': 'Alta', 'tipo_vehiculo_requerido': 'Camioneta',
             'pasajeros': 6, 'duracion_horas': 8, 'km_estimados': 380, 'estado_solicitud': 'Asignada',

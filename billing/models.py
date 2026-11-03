@@ -10,7 +10,9 @@ from trucks.models import TipoVehiculo
 class Tarifa(models.Model):
     """Tarifa pactada con un cliente para un tipo de unidad (M6)."""
 
-    cliente = models.CharField(max_length=150, verbose_name="Cliente")
+    cliente = models.ForeignKey(
+        'crm.Cliente', on_delete=models.PROTECT, related_name='tarifas', verbose_name="Cliente",
+    )
     tipo_vehiculo = models.ForeignKey(TipoVehiculo, on_delete=models.PROTECT, related_name='tarifas', verbose_name="Tipo de vehículo")
     tarifa_base = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Tarifa base por servicio (S/)")
     km_incluidos = models.PositiveIntegerField(default=0, verbose_name="Kilómetros incluidos")
@@ -20,7 +22,7 @@ class Tarifa(models.Model):
     class Meta:
         verbose_name = "Tarifa"
         verbose_name_plural = "Tarifas"
-        ordering = ['cliente', 'tipo_vehiculo__asientos_referencia']
+        ordering = ['cliente__razon_social', 'tipo_vehiculo__asientos_referencia']
         constraints = [
             models.UniqueConstraint(fields=['cliente', 'tipo_vehiculo'], name='tarifa_unica_cliente_tipo'),
         ]
@@ -30,9 +32,9 @@ class Tarifa(models.Model):
 
     @classmethod
     def buscar(cls, cliente, tipo_vehiculo):
-        return cls.objects.filter(
-            cliente__iexact=(cliente or '').strip(), tipo_vehiculo=tipo_vehiculo, activo=True
-        ).first()
+        if cliente is None:
+            return None
+        return cls.objects.filter(cliente=cliente, tipo_vehiculo=tipo_vehiculo, activo=True).first()
 
 
 class Valorizacion(models.Model):

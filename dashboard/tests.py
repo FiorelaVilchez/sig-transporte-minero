@@ -26,6 +26,7 @@ from documents.models import DocumentoConductor, DocumentoVehiculo
 from drivers.models import Conductor
 from service_requests.models import SolicitudServicio
 from trucks.models import Vehiculo
+from crm.models import Cliente
 
 
 class DashboardKPIsTestCase(TestCase):
@@ -165,7 +166,7 @@ class DashboardKPIsTestCase(TestCase):
 
     def _crear_solicitud(self, cliente, estado):
         return SolicitudServicio.objects.create(
-            cliente=cliente,
+            cliente=Cliente.obtener(cliente),
             fecha_servicio=self.hoy + datetime.timedelta(days=1),
             hora_servicio=datetime.time(8, 0),
             origen="Planta",
@@ -238,7 +239,7 @@ class KpiAsignacionesPorConductorLimiteTestCase(TestCase):
     def setUp(self):
         self.hoy = datetime.date.today()
         self.solicitud = SolicitudServicio.objects.create(
-            cliente="Cliente Test",
+            cliente=Cliente.obtener("Cliente Test"),
             fecha_servicio=self.hoy,
             hora_servicio=datetime.time(9, 0),
             origen="A",
@@ -384,7 +385,7 @@ class CSVExportTestCase(TestCase):
             estado="Disponible",
         )
         self.solicitud = SolicitudServicio.objects.create(
-            cliente="Minera A",
+            cliente=Cliente.obtener("Minera A"),
             fecha_servicio=self.hoy,
             hora_servicio=datetime.time(8, 0),
             origen="A",

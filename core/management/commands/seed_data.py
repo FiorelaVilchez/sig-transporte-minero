@@ -17,6 +17,7 @@ from assignments.models import (
     Asignacion, ChecklistPreoperacional, GastoServicio, Incidencia, Notificacion,
 )
 from billing.models import Tarifa, Valorizacion
+from crm.models import Cliente
 from billing.services import cambiar_estado, generar_valorizacion
 from documents.catalogo import cargar_requisitos
 from documents.models import DocumentoConductor, DocumentoVehiculo, RequisitoDocumental
@@ -95,6 +96,7 @@ class Command(BaseCommand):
         DocumentoConductor.objects.all().delete()
         DocumentoVehiculo.objects.all().delete()
         Tarifa.objects.all().delete()
+        Cliente.objects.all().delete()
         Vehiculo.objects.all().delete()
         Conductor.objects.all().delete()
 
@@ -160,8 +162,9 @@ class Command(BaseCommand):
         x = doc_v(6, 'Certificado GPS'); x.estado_mina = 'Pendiente'; x.save()                            # R8
         doc_v(8, 'Seguro de ocupantes').delete()                                                          # R1
 
-        self.stdout.write('Tarifas...')
-        for cliente in CLIENTES:
+        self.stdout.write('Clientes y tarifas...')
+        clientes = [Cliente.objects.create(razon_social=nombre) for nombre in CLIENTES]
+        for cliente in clientes:
             for tipo, base, km, pkm in TARIFAS_BASE:
                 Tarifa.objects.create(cliente=cliente, tipo_vehiculo=TipoVehiculo.objects.get(nombre=tipo), tarifa_base=Decimal(base),
                                       km_incluidos=km, precio_km_adicional=Decimal(pkm))
@@ -170,7 +173,7 @@ class Command(BaseCommand):
 
         def sol(cliente, dia, hora, dur, origen, destino, tipo, pax, prioridad, estado, km=380):
             return SolicitudServicio.objects.create(
-                cliente=CLIENTES[cliente], fecha_servicio=d(dia), hora_servicio=datetime.time(*hora),
+                cliente=clientes[cliente], fecha_servicio=d(dia), hora_servicio=datetime.time(*hora),
                 origen=origen, destino=destino, tipo_servicio='Traslado de personal', prioridad=prioridad,
                 tipo_vehiculo_requerido_id=tipo, pasajeros=pax, duracion_horas=dur, km_estimados=km,
                 estado_solicitud=estado,
