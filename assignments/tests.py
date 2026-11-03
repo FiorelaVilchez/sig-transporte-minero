@@ -9,6 +9,7 @@ from documents.models import DocumentoConductor, DocumentoVehiculo, RequisitoDoc
 from service_requests.models import SolicitudServicio
 from assignments.models import Asignacion, Notificacion
 from assignments.services import asignar_automaticamente
+from crm.models import Cliente
 
 
 class ValidarAsignacionTestCase(TestCase):
@@ -189,7 +190,7 @@ class AsignacionAutomaticaTestCase(TestCase):
         self.hoy = datetime.date.today()
         # Crear una solicitud pendiente
         self.solicitud = SolicitudServicio.objects.create(
-            cliente="Minera Test",
+            cliente=Cliente.obtener("Minera Test"),
             fecha_servicio=self.hoy + datetime.timedelta(days=2),
             hora_servicio=datetime.time(8, 0),
             origen="Juliaca",
@@ -306,7 +307,7 @@ class AsignacionAutomaticaTestCase(TestCase):
         
         # Crear una asignación histórica para self.conductor para que tenga 1 asignación
         solicitud_dummy = SolicitudServicio.objects.create(
-            cliente="Minera Dummy",
+            cliente=Cliente.obtener("Minera Dummy"),
             fecha_servicio=self.hoy - datetime.timedelta(days=5),
             hora_servicio=datetime.time(8, 0),
             origen="A",

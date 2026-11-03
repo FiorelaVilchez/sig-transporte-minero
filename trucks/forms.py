@@ -24,6 +24,9 @@ class VehiculoForm(forms.ModelForm):
         self.fields['tipo'].empty_label = "Seleccione un tipo"
         self.fields['tipo'].label_from_instance = lambda t: f"{t.nombre} (referencia {t.asientos_referencia} asientos)"
 
+    def clean_placa(self):
+        return (self.cleaned_data.get('placa') or '').strip().upper()
+
 
 class TipoVehiculoForm(forms.ModelForm):
     class Meta:

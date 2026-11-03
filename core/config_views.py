@@ -1,14 +1,16 @@
-"""Configuración de catálogos de la versión 2.0: tipos de vehículo, requisitos y tarifas."""
+"""Configuración de catálogos: tipos de vehículo, requisitos, clientes y tarifas."""
 from django.contrib import messages
+from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from billing.models import Tarifa
+from crm.models import Cliente
 from documents.models import RequisitoDocumental
 from trucks.models import TipoVehiculo
 
-from .config_forms import RequisitoForm, TarifaForm, TipoVehiculoForm
+from .config_forms import ClienteForm, RequisitoForm, TarifaForm, TipoVehiculoForm
 from .decorators import role_required
 
 CATALOGOS = {
@@ -19,6 +21,10 @@ CATALOGOS = {
     'requisitos': {
         'modelo': RequisitoDocumental, 'form': RequisitoForm, 'titulo': 'Requisito documental',
         'roles': ('Administrador de operaciones',),
+    },
+    'clientes': {
+        'modelo': Cliente, 'form': ClienteForm, 'titulo': 'Cliente',
+        'roles': ('Administrador de operaciones', 'Finanzas'),
     },
     'tarifas': {
         'modelo': Tarifa, 'form': TarifaForm, 'titulo': 'Tarifa',
@@ -33,7 +39,8 @@ def configuracion(request):
     return render(request, 'core/configuracion.html', {
         'tipos': TipoVehiculo.objects.all(),
         'requisitos': RequisitoDocumental.objects.prefetch_related('tipos_vehiculo'),
-        'tarifas': Tarifa.objects.select_related('tipo_vehiculo'),
+        'clientes': Cliente.objects.annotate(n_solicitudes=Count('solicitudes')),
+        'tarifas': Tarifa.objects.select_related('cliente', 'tipo_vehiculo'),
         'puede_operaciones': rol == 'Administrador de operaciones',
     })
 

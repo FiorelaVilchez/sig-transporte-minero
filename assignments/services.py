@@ -191,7 +191,7 @@ def iniciar_ruta(asignacion, usuario=None):
 
 
 def completar_servicio(asignacion, *, km_final=None, usuario=None):
-    """Cierra el servicio, libera recursos y genera la valorización en borrador (M6)."""
+    """Cierra el servicio, libera recursos y genera la valorización en borrador (M6), todo en una transacción."""
     solicitud = asignacion.solicitud
     with transaction.atomic():
         if km_final is not None:
@@ -204,8 +204,8 @@ def completar_servicio(asignacion, *, km_final=None, usuario=None):
         solicitud.estado_solicitud = "Completada"
         solicitud.save()
         registrar_cambio(solicitud, usuario, 'Estado de Solicitud', anterior, 'Completada', 'Servicio finalizado')
-    from billing.services import generar_valorizacion
-    return generar_valorizacion(solicitud)
+        from billing.services import generar_valorizacion
+        return generar_valorizacion(solicitud)
 
 
 def reportar_incidencia(asignacion, incidencia, usuario=None):

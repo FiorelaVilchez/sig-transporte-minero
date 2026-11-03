@@ -1,3 +1,4 @@
+from django.core.validators import RegexValidator
 from django.db import models
 
 
@@ -47,7 +48,10 @@ class Vehiculo(models.Model):
     ]
 
     truck_id = models.BigAutoField(primary_key=True)
-    placa = models.CharField(max_length=15, unique=True, verbose_name="Placa")
+    placa = models.CharField(
+        max_length=15, unique=True, verbose_name="Placa",
+        validators=[RegexValidator(r'^[A-Z0-9]{3}-\d{3}$', "La placa debe tener el formato ABC-123.")],
+    )
     tipo = models.ForeignKey(
         TipoVehiculo, to_field='nombre', db_column='tipo', on_delete=models.PROTECT,
         related_name='vehiculos', verbose_name="Tipo de Vehículo",

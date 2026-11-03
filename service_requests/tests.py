@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from core.models import PerfilUsuario
 from .models import SolicitudServicio
+from crm.models import Cliente
 
 class SolicitudServicioViewsTestCase(TestCase):
     def setUp(self):
@@ -19,7 +20,7 @@ class SolicitudServicioViewsTestCase(TestCase):
 
         # Create test requests
         self.req1 = SolicitudServicio.objects.create(
-            cliente="Cliente A",
+            cliente=Cliente.obtener("Cliente A"),
             fecha_servicio=datetime.date.today() + datetime.timedelta(days=2),
             hora_servicio=datetime.time(14, 0),
             origen="Punto A",
@@ -30,7 +31,7 @@ class SolicitudServicioViewsTestCase(TestCase):
             estado_solicitud="Pendiente"
         )
         self.req2 = SolicitudServicio.objects.create(
-            cliente="Cliente B",
+            cliente=Cliente.obtener("Cliente B"),
             fecha_servicio=datetime.date.today() + datetime.timedelta(days=1),
             hora_servicio=datetime.time(8, 0),
             origen="Punto C",
@@ -80,7 +81,7 @@ class SolicitudServicioViewsTestCase(TestCase):
         
         # Post data
         post_data = {
-            'cliente': 'Cliente C',
+            'cliente': Cliente.obtener('Cliente C').pk,
             'fecha_servicio': '2026-08-15',
             'hora_servicio': '10:30',
             'origen': 'Origen C',
@@ -95,4 +96,4 @@ class SolicitudServicioViewsTestCase(TestCase):
         }
         response = self.client.post(reverse('service_requests:solicitud_create'), post_data)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(SolicitudServicio.objects.filter(cliente='Cliente C').exists())
+        self.assertTrue(SolicitudServicio.objects.filter(cliente__razon_social='Cliente C').exists())

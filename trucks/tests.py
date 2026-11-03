@@ -6,6 +6,7 @@ from core.models import PerfilUsuario
 from trucks.models import Vehiculo
 from service_requests.models import SolicitudServicio
 from assignments.models import Asignacion
+from crm.models import Cliente
 
 class VehiculoViewsTestCase(TestCase):
     def setUp(self):
@@ -103,7 +104,7 @@ class VehiculoViewsTestCase(TestCase):
             seguro_vigente=True,
         )
         solicitud = SolicitudServicio.objects.create(
-            cliente="Cliente Test 2",
+            cliente=Cliente.obtener("Cliente Test 2"),
             fecha_servicio=datetime.date.today(),
             hora_servicio=datetime.time(10, 0),
             origen="Lima",
