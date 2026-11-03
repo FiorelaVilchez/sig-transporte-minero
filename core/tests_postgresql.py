@@ -46,6 +46,11 @@ class BaseActivaTests(EscenarioV2):
         with self.assertRaises(ERRORES_BD), transaction.atomic():
             Asignacion.objects.filter(pk=self.asignacion.pk).update(vehiculo=otra)
 
+    def test_trigger_no_bloquea_guardar_sin_cambiar_vehiculo(self):
+        Vehiculo.objects.filter(pk=self.vehiculo.pk).update(estado='En mantenimiento')
+        self.asignacion.observacion = 'Unidad enviada a revisión'
+        self.asignacion.save()
+
     def test_procedimiento_cierra_servicio_y_crea_valorizacion(self):
         Tarifa.objects.create(cliente=Cliente.obtener('Cliente Demo S.A.C.'), tipo_vehiculo=self.camioneta,
                               tarifa_base=Decimal('680'), km_incluidos=380, precio_km_adicional=Decimal('3.20'))

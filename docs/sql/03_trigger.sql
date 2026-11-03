@@ -10,6 +10,9 @@ BEGIN
     IF NEW.vehiculo_id IS NULL OR NEW.estado_operativo NOT IN ('Programado', 'Listo para salir') THEN
         RETURN NEW;
     END IF;
+    IF TG_OP = 'UPDATE' AND NEW.vehiculo_id = OLD.vehiculo_id THEN
+        RETURN NEW;
+    END IF;
 
     SELECT estado, placa INTO v_estado, v_placa
     FROM trucks_vehiculo WHERE truck_id = NEW.vehiculo_id;
